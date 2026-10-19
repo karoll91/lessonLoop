@@ -24,6 +24,7 @@ class StudentResource extends JsonResource
             'full_name' => $this->full_name,
             'phone' => $this->phone,
             'is_active' => $this->is_active,
+            'queue' => $this->whenLoaded('queueStatus', fn (): array => $this->queueStatus->toArray()),
         ];
     }
 }

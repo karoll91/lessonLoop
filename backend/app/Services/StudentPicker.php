@@ -2,9 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\AnswerStatus;
 use App\Exceptions\LessonFlowException;
-use App\Models\Answer;
 use App\Models\Lesson;
 use App\Models\Student;
 use Illuminate\Support\Collection;
@@ -25,7 +23,10 @@ use Random\Randomizer;
  */
 class StudentPicker
 {
-    public function __construct(private Randomizer $randomizer) {}
+    public function __construct(
+        private QueueStatusResolver $queue,
+        private Randomizer $randomizer,
+    ) {}
 
     /**
      * Draw one student for the lesson.
@@ -71,34 +72,23 @@ class StudentPicker
             return collect();
         }
 
-        $history = $this->courseHistory($lesson, $students->pluck('id')->all());
-        $passScore = (int) config('lessonloop.pass_score');
-        $cooldown = (int) config('lessonloop.cooldown_lessons');
+        $statuses = $this->queue->forStudents($lesson->course, $lesson->sequence, $students->modelKeys());
 
         $eligible = collect();
         $resting = collect();
 
         foreach ($students as $student) {
-            $answers = $history->get($student->id, collect());
-            $latest = $answers->first();
-            $isDebtor = $latest !== null && $latest->score < $passScore;
-            $lastPassSequence = $answers
-                ->filter(fn (Answer $answer): bool => $answer->score >= $passScore)
-                ->max(fn (Answer $answer): int => $answer->lesson->sequence);
+            $status = $statuses->get($student->id);
 
-            $isResting = ! $isDebtor
-                && $lastPassSequence !== null
-                && $lesson->sequence - $lastPassSequence < $cooldown;
-
-            if ($isResting) {
-                $resting->push(['student' => $student, 'last_pass_sequence' => $lastPassSequence]);
+            if ($status->isResting()) {
+                $resting->push(['student' => $student, 'last_pass_sequence' => $status->lastPassSequence]);
 
                 continue;
             }
 
-            $eligible->push(match (true) {
-                $latest === null => new PickCandidate($student, (int) config('lessonloop.never_asked_weight'), PickCandidate::REASON_NEVER_ASKED),
-                $isDebtor => new PickCandidate($student, (int) config('lessonloop.debtor_weight'), PickCandidate::REASON_DEBTOR),
+            $eligible->push(match ($status->state) {
+                QueueStatus::NEVER_ASKED => new PickCandidate($student, (int) config('lessonloop.never_asked_weight'), PickCandidate::REASON_NEVER_ASKED),
+                QueueStatus::DEBTOR => new PickCandidate($student, (int) config('lessonloop.debtor_weight'), PickCandidate::REASON_DEBTOR),
                 default => new PickCandidate($student, 1, PickCandidate::REASON_QUEUE),
             });
         }
@@ -133,26 +123,5 @@ class StudentPicker
             ->whereNotIn('id', $absentIds->merge($alreadyAskedIds)->unique()->all())
             ->orderBy('id')
             ->get();
-    }
-
-    /**
-     * Scored answers of the given students in earlier lessons of the same course,
-     * newest first, grouped by student.
-     *
-     * @param  array<int, int>  $studentIds
-     * @return Collection<int, Collection<int, Answer>>
-     */
-    private function courseHistory(Lesson $lesson, array $studentIds): Collection
-    {
-        return Answer::query()
-            ->with('lesson:id,sequence')
-            ->whereIn('student_id', $studentIds)
-            ->whereIn('status', [AnswerStatus::Graded, AnswerStatus::NoAnswer])
-            ->whereHas('lesson', fn ($query) => $query
-                ->where('course_id', $lesson->course_id)
-                ->where('sequence', '<', $lesson->sequence))
-            ->get()
-            ->sortByDesc(fn (Answer $answer): array => [$answer->lesson->sequence, $answer->id])
-            ->groupBy('student_id');
     }
 }

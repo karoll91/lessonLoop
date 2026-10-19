@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Student;
 use App\Services\PickCandidate;
+use App\Services\QueueStatusResolver;
 use App\Services\StudentPicker;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Collection;
@@ -147,7 +148,7 @@ class StudentPickerTest extends TestCase
 
     private function picker(): StudentPicker
     {
-        return new StudentPicker(new Randomizer(new Mt19937(2026)));
+        return new StudentPicker(new QueueStatusResolver, new Randomizer(new Mt19937(2026)));
     }
 
     /**
