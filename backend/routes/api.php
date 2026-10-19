@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudyGroupController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\TopicController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login');
@@ -28,6 +29,10 @@ Route::post('/boards/{token}/pair-code', [BoardController::class, 'refreshPairCo
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me'])->name('me');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/me/password', [AuthController::class, 'changePassword'])->middleware('throttle:10,1')->name('me.password');
+
+    Route::apiResource('users', UserController::class);
+    Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
     /*
     | Catalogue: groups, subjects, topics, students, questions, courses.

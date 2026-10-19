@@ -10,6 +10,7 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 | --- | --- |
 | PRD (talablar, qoidalar R1–R8, ma'lumotlar modeli) | https://claude.ai/code/artifact/eac39d2d-2191-4bea-bf05-d9c4458e467d |
 | Design (UI Kit, Doska + pult D1–D10, Mobil M1–M13, Web W1–W12) | https://claude.ai/artifact/NbXN7yFxPtyDcBjCPDQMv8 |
+| Kod (GitHub, `main`) | https://github.com/karoll91/lessonLoop |
 | Eski prototip | `Index.html` |
 | Backend | `backend/` (Laravel) |
 
@@ -67,18 +68,19 @@ Ishga tushirish (backend papkasida, uchta alohida terminal):
 - CRUD: guruhlar (arxivlash), fanlar, mavzular (tartiblash), talabalar, savollar (A–D variantlar, bitta to'g'ri), kurslar.
 - Import: talabalar va savollar — xlsx / xls / csv (`,` yoki `;`) / matn; dry-run oldindan ko'rish; dublikat va xato qatorlar raqami bilan; xlsx shablonlar.
 - Jurnal: talaba × dars JSON matritsasi; xlsx va csv eksport (kelmagan — «K»).
-- **56 ta API route, 94 ta test (296 tekshiruv) — hammasi o'tadi.**
+
+### Faza 2 — Backend'dagi bo'shliqlar ✅
+- **Navbat holati**: `GET /groups/{id}/students?course_id=` — har talaba uchun navbatda / dam olmoqda (necha dars qoldi) / qarzdor / hech so'ralmagan, filtr va sanoqlar. Qoidalar `QueueStatusResolver` da, random ham shundan foydalanadi.
+- **Darslar tarixi** `GET /lessons` (kurs, holat, sana filtrlari; o'rtacha ball, qarzdorlar soni) va **dashboard** `GET /dashboard`.
+- **Bahoni tahrirlash** `PATCH /answers/{id}`: o'qituvchi 24 soat ichida, admin istalgan vaqtda; har o'zgarish `answer_edits` jadvalida sababi bilan.
+- **Sozlamalar** `GET/PATCH/DELETE /settings`: o'tish bali, cooldown, vaznlar, standart savollar soni, tahrir muddati — `settings` jadvalida, `.env` qiymatlari default.
+- **Foydalanuvchilar** `/users`: yaratish (vaqtinchalik parol bir marta ko'rsatiladi), bloklash (barcha qurilmalardan chiqaradi), parolni tiklash; `POST /me/password` — birinchi kirishda parolni almashtirish.
+
+**Jami: 69 ta API route, 122 ta test (393 tekshiruv) — hammasi o'tadi.**
 
 ## Keyingi reja
 
 Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyin admin panel, oxirida mobil ilova. Har bir bosqich oxirida testlar o'tishi va shu fayl yangilanishi shart.
-
-### Faza 2 — Backend'dagi bo'shliqlar (qisqa)
-- [ ] **Navbat holati** talaba ro'yxatida: navbatda / dam olmoqda (necha dars qoldi) / qarzdor / hech so'ralmagan — M10 va W5 ekranlari uchun. StudentPicker hisobini qayta ishlatadi.
-- [ ] **Darslar ro'yxati** (`GET /courses/{id}/lessons`) va **dashboard** endpoint'i (bugungi darslar, qarzdorlar, so'ralmaganlar) — M3, M12, W2, W7.
-- [ ] **Bahoni 24 soat ichida tahrirlash** + o'zgarish tarixi (`answer_edits` jadvali) — M12, W7.
-- [ ] **Sozlamalar jadvali**: o'tish bali, cooldown, standart savollar soni hozir `.env`da; W11/M13'dan o'zgartiriladigan qilish.
-- [ ] **Foydalanuvchilar** (o'qituvchilar) CRUD, vaqtinchalik parol — W10.
 
 ### Faza 3 — Doska web sahifasi (React)
 - [ ] Vite + React + TypeScript, Laravel Echo (Reverb).

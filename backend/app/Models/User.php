@@ -12,12 +12,22 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'login', 'email', 'role', 'password'])]
+#[Fillable(['name', 'login', 'email', 'role', 'password', 'blocked_at', 'must_change_password', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Mirrors the column defaults so a freshly created user has them in memory.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'role' => 'teacher',
+        'must_change_password' => false,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -30,7 +40,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'blocked_at' => 'datetime',
+            'must_change_password' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return HasMany<Lesson, $this>
+     */
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(Lesson::class, 'teacher_id');
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
     }
 
     /**
