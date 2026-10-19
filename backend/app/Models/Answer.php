@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\AnswerStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\AnswerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['lesson_id', 'student_id', 'question_id', 'status', 'score', 'chosen_option', 'comment', 'pick_weight', 'pick_reason', 'graded_at'])]
 class Answer extends Model
@@ -52,6 +54,22 @@ class Answer extends Model
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class);
+    }
+
+    /**
+     * @return HasMany<AnswerEdit, $this>
+     */
+    public function edits(): HasMany
+    {
+        return $this->hasMany(AnswerEdit::class)->latest('id');
+    }
+
+    /**
+     * Until when the teacher may still change the grade; admins are not limited.
+     */
+    public function editableUntil(): ?CarbonInterface
+    {
+        return $this->status->isScored() ? $this->graded_at?->copy()->addHours((int) config('lessonloop.grade_edit_hours')) : null;
     }
 
     public function isPassing(): bool

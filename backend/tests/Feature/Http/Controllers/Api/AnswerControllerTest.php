@@ -106,6 +106,73 @@ class AnswerControllerTest extends TestCase
         $this->assertModelMissing($answer);
     }
 
+    public function test_teacher_changes_a_grade_within_24_hours_and_the_change_is_recorded(): void
+    {
+        [$teacher, $answer] = $this->pendingAnswer();
+        $answer->update(['status' => AnswerStatus::Graded, 'score' => 45, 'graded_at' => now()->subHours(3)]);
+        Sanctum::actingAs($teacher);
+
+        $this->patchJson(route('answers.update', $answer), ['score' => 65, 'reason' => 'Qayta tekshirildi'])
+            ->assertOk()
+            ->assertJsonPath('data.score', 65)
+            ->assertJsonPath('data.passed', true)
+            ->assertJsonPath('data.edits.0.old_score', 45)
+            ->assertJsonPath('data.edits.0.new_score', 65)
+            ->assertJsonPath('data.edits.0.by', $teacher->name);
+    }
+
+    public function test_no_answer_can_be_changed_into_a_real_score(): void
+    {
+        [$teacher, $answer] = $this->pendingAnswer();
+        $answer->update(['status' => AnswerStatus::NoAnswer, 'score' => 0, 'graded_at' => now()]);
+        Sanctum::actingAs($teacher);
+
+        $this->patchJson(route('answers.update', $answer), ['score' => 50, 'reason' => 'Keyin javob berdi'])
+            ->assertOk()
+            ->assertJsonPath('data.status', AnswerStatus::Graded->value);
+    }
+
+    public function test_returns_422_when_the_teacher_edits_after_24_hours(): void
+    {
+        [$teacher, $answer] = $this->pendingAnswer();
+        $answer->update(['status' => AnswerStatus::Graded, 'score' => 45, 'graded_at' => now()->subHours(25)]);
+        Sanctum::actingAs($teacher);
+
+        $this->patchJson(route('answers.update', $answer), ['score' => 65, 'reason' => 'Kech'])
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'edit_window_closed');
+    }
+
+    public function test_admin_edits_a_grade_after_24_hours(): void
+    {
+        [, $answer] = $this->pendingAnswer();
+        $answer->update(['status' => AnswerStatus::Graded, 'score' => 45, 'graded_at' => now()->subWeek()]);
+        Sanctum::actingAs(User::factory()->admin()->create());
+
+        $this->patchJson(route('answers.update', $answer), ['score' => 70, 'reason' => 'Shikoyat bo\'yicha'])->assertOk();
+    }
+
+    public function test_returns_422_when_editing_an_ungraded_answer(): void
+    {
+        [$teacher, $answer] = $this->pendingAnswer();
+        Sanctum::actingAs($teacher);
+
+        $this->patchJson(route('answers.update', $answer), ['score' => 70, 'reason' => 'Sabab'])
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'answer_not_graded');
+    }
+
+    public function test_returns_422_without_a_reason(): void
+    {
+        [$teacher, $answer] = $this->pendingAnswer();
+        $answer->update(['status' => AnswerStatus::Graded, 'score' => 45, 'graded_at' => now()]);
+        Sanctum::actingAs($teacher);
+
+        $this->patchJson(route('answers.update', $answer), ['score' => 70])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reason');
+    }
+
     /**
      * @return array{0: User, 1: Answer}
      */

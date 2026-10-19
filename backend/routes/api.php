@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/lessons/{lesson}/finish', [LessonController::class, 'finish'])->name('lessons.finish');
 
     Route::post('/answers/{answer}/grade', [AnswerController::class, 'grade'])->name('answers.grade');
+    Route::patch('/answers/{answer}', [AnswerController::class, 'update'])->name('answers.update');
     Route::post('/answers/{answer}/skip', [AnswerController::class, 'skip'])->name('answers.skip');
     Route::post('/answers/{answer}/redraw', [AnswerController::class, 'redraw'])->name('answers.redraw');
 

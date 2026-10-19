@@ -133,6 +133,38 @@ class LessonRunner
     }
 
     /**
+     * Change a grade after the fact, keeping an audit record. Teachers may do
+     * so within grade_edit_hours of grading; admins at any time.
+     *
+     * @throws LessonFlowException
+     */
+    public function regrade(Answer $answer, User $editor, int $score, string $reason): Answer
+    {
+        if (! $answer->status->isScored()) {
+            throw LessonFlowException::answerNotGraded();
+        }
+
+        if (! $editor->isAdmin() && $answer->editableUntil()?->isPast() !== false) {
+            throw LessonFlowException::editWindowClosed();
+        }
+
+        DB::transaction(function () use ($answer, $editor, $score, $reason): void {
+            $answer->edits()->create([
+                'user_id' => $editor->id,
+                'old_status' => $answer->status,
+                'new_status' => AnswerStatus::Graded,
+                'old_score' => $answer->score,
+                'new_score' => $score,
+                'reason' => $reason,
+            ]);
+
+            $answer->update(['status' => AnswerStatus::Graded, 'score' => $score]);
+        });
+
+        return $answer;
+    }
+
+    /**
      * The student did not answer: scored 0 and stays in the queue (R8).
      */
     public function markNoAnswer(Answer $answer, ?string $comment = null): Answer

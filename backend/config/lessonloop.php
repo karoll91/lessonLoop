@@ -27,6 +27,12 @@ return [
     'default_question_count' => (int) env('LESSONLOOP_DEFAULT_QUESTION_COUNT', 8),
 
     /*
+    | A teacher may change a grade this many hours after giving it (admins always).
+    */
+
+    'grade_edit_hours' => 24,
+
+    /*
     |--------------------------------------------------------------------------
     | Classroom board pairing
     |--------------------------------------------------------------------------

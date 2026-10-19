@@ -46,6 +46,16 @@ class LessonFlowException extends RuntimeException
         return new self('Bu javob allaqachon baholangan.', 'answer_closed');
     }
 
+    public static function answerNotGraded(): self
+    {
+        return new self('Faqat baholangan javobni tahrirlash mumkin.', 'answer_not_graded');
+    }
+
+    public static function editWindowClosed(): self
+    {
+        return new self('Bahoni tahrirlash muddati tugagan. Admin bilan bog\'laning.', 'edit_window_closed');
+    }
+
     public static function boardNotReady(): self
     {
         return new self('Doskaga dars biriktirilmagan.', 'board_not_ready');

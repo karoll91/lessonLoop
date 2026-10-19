@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Answer;
+use App\Models\AnswerEdit;
 use App\Models\QuestionOption;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -32,6 +33,15 @@ class AnswerResource extends JsonResource
             'pick_weight' => $this->pick_weight,
             'pick_reason' => $this->pick_reason,
             'graded_at' => $this->graded_at?->toIso8601String(),
+            'editable_until' => $this->editableUntil()?->toIso8601String(),
+            'edits' => $this->whenLoaded('edits', fn (): array => $this->edits->map(fn (AnswerEdit $edit): array => [
+                'old_score' => $edit->old_score,
+                'new_score' => $edit->new_score,
+                'old_status' => $edit->old_status->value,
+                'reason' => $edit->reason,
+                'by' => $edit->user?->name,
+                'at' => $edit->created_at?->toIso8601String(),
+            ])->all()),
             'student' => $this->whenLoaded('student', fn (): array => [
                 'id' => $this->student->id,
                 'full_name' => $this->student->full_name,

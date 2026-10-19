@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GradeAnswerRequest;
 use App\Http\Requests\SkipAnswerRequest;
+use App\Http\Requests\UpdateAnswerRequest;
 use App\Http\Resources\AnswerResource;
 use App\Models\Answer;
 use App\Services\LessonRunner;
@@ -24,6 +25,16 @@ class AnswerController extends Controller
         );
 
         return AnswerResource::make($answer->load(['student', 'question.options']));
+    }
+
+    /**
+     * Change a grade after the lesson, with a reason that is kept in the history.
+     */
+    public function update(UpdateAnswerRequest $request, Answer $answer): AnswerResource
+    {
+        $answer = $this->runner->regrade($answer, $request->user(), $request->integer('score'), $request->string('reason'));
+
+        return AnswerResource::make($answer->load(['student', 'question.options', 'edits.user']));
     }
 
     public function skip(SkipAnswerRequest $request, Answer $answer): AnswerResource
