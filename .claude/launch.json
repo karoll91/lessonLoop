@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "D:/php83/php.exe",
+      "runtimeArgs": ["backend/artisan", "serve", "--host=0.0.0.0", "--port=8000"],
+      "port": 8000
+    },
+    {
+      "name": "reverb",
+      "runtimeExecutable": "D:/php83/php.exe",
+      "runtimeArgs": ["backend/artisan", "reverb:start", "--host=0.0.0.0", "--port=8080", "--debug"],
+      "port": 8080
+    },
+    {
+      "name": "board",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "board", "run", "dev", "--", "--port", "5173", "--host", "0.0.0.0"],
+      "port": 5173
+    }
+  ]
+}

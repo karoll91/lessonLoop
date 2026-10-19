@@ -23,7 +23,8 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 | Real-time | Laravel Reverb (WebSocket, port 8080) | Doska ↔ telefon sinxroni |
 | Auth | Sanctum token | Mobil va web uchun bitta API |
 | Excel | maatwebsite/excel 4.0 | Import va jurnal eksporti |
-| Web (doska, admin) | React + TypeScript + Vite | Hali boshlanmagan |
+| Doska (`board/`) | React 19 + TypeScript + Vite, laravel-echo + pusher-js, qrcode, Vitest | Faza 3 da qilindi |
+| Web admin | React + TypeScript + Vite | Hali boshlanmagan |
 | Mobil | Flutter | Hali boshlanmagan |
 
 ## Lokal muhit
@@ -33,12 +34,21 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 - **MySQL:** OpenServer panelidan MySQL-8.0 yoqiladi (port 3306, root, parolsiz).
 - **Demo ma'lumot:** `php artisan migrate:fresh --seed` — login `admin`, parol `password` (faqat lokal).
 
-Ishga tushirish (backend papkasida, uchta alohida terminal):
+Ishga tushirish (loyiha ildizida, uchta alohida terminal; `.claude/launch.json` da ham bor):
 
 ```bash
-/d/php83/php.exe artisan serve --host=0.0.0.0 --port=8000
-/d/php83/php.exe artisan reverb:start --host=0.0.0.0 --port=8080
-/d/php83/php.exe artisan test --compact
+/d/php83/php.exe backend/artisan serve --host=0.0.0.0 --port=8000
+/d/php83/php.exe backend/artisan reverb:start --host=0.0.0.0 --port=8080
+npm --prefix board run dev -- --port 5173 --host 0.0.0.0
+```
+
+Doska: brauzerda `http://<kompyuter-IP>:5173` → to'liq ekran uchun **F**, mavzu uchun **T**. Doska tokeni brauzerda saqlanadi, qayta yuklanganda o'sha sessiya tiklanadi. Sozlamalar `board/.env` da (`board/.env.example` nusxasi): API manzili, Reverb kaliti, doska nomi.
+
+Testlar:
+
+```bash
+/d/php83/php.exe backend/artisan test --compact
+npm --prefix board test
 ```
 
 ## Asosiy qarorlar
@@ -78,15 +88,21 @@ Ishga tushirish (backend papkasida, uchta alohida terminal):
 
 **Jami: 69 ta API route, 122 ta test (393 tekshiruv) — hammasi o'tadi.**
 
+### Faza 3 — Doska web sahifasi ✅
+- `board/` — React + Vite. Ekranlar: D1 QR (`lessonloop://pair?code=…`) va 6 xonali kod (muddati tugasa avtomatik yangilanadi), D2 kutish, D3 random baraban, D4 savol (+ ixtiyoriy taymer), D5 to'g'ri javob, D6 baho (o'tdi / qoniqarsiz), D7 test variantlari (to'g'ri va talaba tanlovi), D8 natijalar, D10 tanaffus va qora ekran.
+- D9: server bilan aloqa uzilsa oxirgi ekran saqlanadi, ustida ogohlantirish; qayta ulanganda holat serverdan qayta olinadi. Qo'shimcha himoya — har 30 soniyada holatni so'rab turadi.
+- Light/dark (T tugmasi, kompyuterda eslab qolinadi), to'liq ekran (F), shriftlar lokal (internetsiz ishlaydi), o'lchamlar ekranga moslashadi.
+- 14 ta Vitest testi; backend + Reverb bilan brauzerda end-to-end tekshirilgan (D1–D10, light va dark).
+
+**Ochiq masalalar:**
+- D9 dizaynidagi «Pult uzildi» (telefon aloqasi yo'qolgani) hali yo'q — buning uchun telefon backend'ga heartbeat yuborishi kerak; Faza 5 (Flutter) bilan birga qilinadi.
+- Birinchi sinovda doska bir marta WebSocket xabarini olmadi (keyingi barcha urinishlarda keldi, sababi topilmadi); 30 soniyalik zaxira so'rov buni yopadi, lekin kuzatib borish kerak.
+- Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak.
+
 ## Keyingi reja
 
 Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyin admin panel, oxirida mobil ilova. Har bir bosqich oxirida testlar o'tishi va shu fayl yangilanishi shart.
 
-### Faza 3 — Doska web sahifasi (React)
-- [ ] Vite + React + TypeScript, Laravel Echo (Reverb).
-- [ ] D1–D10: QR/kod bilan ulanish, kutish, random baraban, savol, javob, baho, test, yakun, aloqa uzilishi, tanaffus.
-- [ ] Qayta yuklanganda `GET /boards/{token}/state` dan tiklanish, avtomatik qayta ulanish.
-- [ ] OpenServer'da `board.lessonloop.loc` domeni.
 
 ### Faza 4 — Web admin panel (React)
 - [ ] W1–W12: kirish, dashboard, guruhlar, fanlar/mavzular, talabalar + import, savollar banki + muharrir, darslar tarixi, jurnal, hisobotlar, foydalanuvchilar, sozlamalar, xato sahifalari.

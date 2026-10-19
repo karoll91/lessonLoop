@@ -1,0 +1,89 @@
+/* LessonLoop board — design A «Sokin akademik». Sizes are in rem:
+   1rem = 16px on a 1280×720 screen and scales with the viewport, so the
+   layout looks the same on a projector and on a 4K panel. */
+
+:root {
+  --bg: #f4f3ee;
+  --surface: #ffffff;
+  --surface2: #efede6;
+  --ink: #1a1d24;
+  --ink2: #5b606b;
+  --ink3: #8a8f99;
+  --line: #dedbd2;
+  --track: #e6e3da;
+  --accent: #0e6b6b;
+  --on-accent: #ffffff;
+  --accent-soft: #dcedeb;
+  --pass: #1f7a3d;
+  --pass-soft: #e1f1e5;
+  --warn: #b4530a;
+  --warn-soft: #fbebdd;
+  --danger: #b42318;
+  --danger-soft: #fde8e6;
+  --info: #2b5fb4;
+  --info-soft: #e3ecfa;
+  --shadow: 0 0.75rem 2rem rgba(26, 29, 36, 0.14);
+
+  color-scheme: light;
+  font-size: min(1.25vw, 2.2222vh);
+}
+
+:root[data-theme='dark'] {
+  --bg: #101317;
+  --surface: #181c22;
+  --surface2: #222730;
+  --ink: #ecedef;
+  --ink2: #a1a7b2;
+  --ink3: #6b717c;
+  --line: #2c323c;
+  --track: #2c323c;
+  --accent: #4fc2bc;
+  --on-accent: #062322;
+  --accent-soft: #143534;
+  --pass: #5bcb82;
+  --pass-soft: #16301f;
+  --warn: #f0a260;
+  --warn-soft: #3a2614;
+  --danger: #f97066;
+  --danger-soft: #3b1715;
+  --info: #7fa8f0;
+  --info-soft: #172540;
+  --shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
