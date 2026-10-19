@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\LessonStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StartLessonRequest;
 use App\Http\Resources\AnswerResource;
@@ -10,11 +11,41 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Services\LessonRunner;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class LessonController extends Controller
 {
     public function __construct(private LessonRunner $runner) {}
+
+    /**
+     * Lesson history of the user's courses, newest first.
+     */
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $request->validate([
+            'course_id' => ['sometimes', 'integer'],
+            'status' => ['sometimes', Rule::enum(LessonStatus::class)],
+            'from' => ['sometimes', 'date'],
+            'to' => ['sometimes', 'date'],
+        ]);
+
+        $lessons = Lesson::query()
+            ->visibleTo($request->user())
+            ->withSummary()
+            ->with(['course.studyGroup', 'course.subject'])
+            ->when($request->filled('course_id'), fn ($query) => $query->where('course_id', $request->integer('course_id')))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+            ->when($request->filled('from'), fn ($query) => $query->whereDate('started_at', '>=', $request->date('from')))
+            ->when($request->filled('to'), fn ($query) => $query->whereDate('started_at', '<=', $request->date('to')))
+            ->orderByDesc('started_at')
+            ->orderByDesc('id')
+            ->paginate($this->perPage($request));
+
+        return LessonResource::collection($lessons);
+    }
 
     public function store(StartLessonRequest $request, Course $course): JsonResponse
     {

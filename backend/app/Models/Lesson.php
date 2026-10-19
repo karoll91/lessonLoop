@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\AnswerStatus;
 use App\Enums\LessonStatus;
 use Database\Factories\LessonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -69,6 +72,33 @@ class Lesson extends Model
     public function answers(): HasMany
     {
         return $this->hasMany(Answer::class);
+    }
+
+    /**
+     * Lessons of the courses the user teaches; admins see all.
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        if (! $user->isAdmin()) {
+            $query->whereHas('course', fn (Builder $courses) => $courses->where('teacher_id', $user->id));
+        }
+    }
+
+    /**
+     * Adds asked_count, retry_count and average_score for list views.
+     */
+    #[Scope]
+    protected function withSummary(Builder $query): void
+    {
+        $scored = [AnswerStatus::Graded, AnswerStatus::NoAnswer];
+
+        $query
+            ->withCount([
+                'answers as asked_count' => fn (Builder $answers) => $answers->where('status', '!=', AnswerStatus::Absent),
+                'answers as retry_count' => fn (Builder $answers) => $answers->whereIn('status', $scored)->where('score', '<', (int) config('lessonloop.pass_score')),
+            ])
+            ->withAvg(['answers as average_score' => fn (Builder $answers) => $answers->whereIn('status', $scored)], 'score');
     }
 
     public function isFinished(): bool

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AnswerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BoardController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\LessonController;
@@ -46,6 +47,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses/{course}/journal', [JournalController::class, 'show'])->name('courses.journal');
     Route::get('/courses/{course}/journal/export', [JournalController::class, 'export'])->name('courses.journal.export');
 
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
     Route::post('/courses/{course}/lessons', [LessonController::class, 'store'])->name('lessons.store');
     Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
     Route::post('/lessons/{lesson}/draw', [LessonController::class, 'draw'])->name('lessons.draw');

@@ -107,6 +107,39 @@ class LessonControllerTest extends TestCase
         $this->assertSame(0, Answer::query()->count());
     }
 
+    public function test_history_lists_own_lessons_newest_first_with_averages(): void
+    {
+        ['teacher' => $teacher, 'course' => $course, 'students' => $students] = $this->courseSetup();
+        $older = Lesson::factory()->finished()->for($course)->create(['sequence' => 1, 'started_at' => now()->subWeek()]);
+        $newer = Lesson::factory()->finished()->for($course)->create(['sequence' => 2, 'started_at' => now()->subDay()]);
+        Answer::factory()->graded(90)->for($newer)->for($students[0])->create();
+        Answer::factory()->graded(40)->for($newer)->for($students[1])->create();
+        Answer::factory()->absent()->for($newer)->for($students[2])->create();
+        Lesson::factory()->create();
+        Sanctum::actingAs($teacher);
+
+        $this->getJson(route('lessons.index'))
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $newer->id)
+            ->assertJsonPath('data.0.asked_count', 2)
+            ->assertJsonPath('data.0.retry_count', 1)
+            ->assertJsonPath('data.0.average_score', 65)
+            ->assertJsonPath('data.1.id', $older->id);
+    }
+
+    public function test_history_filters_by_date_range(): void
+    {
+        ['teacher' => $teacher, 'course' => $course] = $this->courseSetup();
+        Lesson::factory()->finished()->for($course)->create(['sequence' => 1, 'started_at' => '2026-10-01 09:00']);
+        $inRange = Lesson::factory()->finished()->for($course)->create(['sequence' => 2, 'started_at' => '2026-10-15 09:00']);
+        Sanctum::actingAs($teacher);
+
+        $this->getJson(route('lessons.index', ['from' => '2026-10-10', 'to' => '2026-10-20']))
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $inRange->id);
+    }
+
     private function startedLesson(User $teacher, $course, int $questionCount = 3): Lesson
     {
         Sanctum::actingAs($teacher);
