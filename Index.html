@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savol Javob</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .setup-section {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .upload-box {
+            border: 3px dashed #4facfe;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fbff;
+        }
+
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f0f7ff;
+        }
+
+        .upload-box h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .textarea-input {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .textarea-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .start-section {
+            padding: 30px;
+            text-align: center;
+            background: #f8fbff;
+            border-top: 1px solid #e0e6ed;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            color: white;
+            padding: 20px 50px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .quiz-section {
+            display: none;
+            padding: 30px;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-left: 5px solid #4facfe;
+        }
+
+        .student-info {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .student-info h3 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .answer-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .answer-area p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .answer-box {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .answer-box p {
+            font-style: italic;
+            color: #333;
+        }
+
+        .grade-input {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .grade-input label {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .grade-input input {
+            padding: 10px 20px;
+            border: 2px solid #4facfe;
+            border-radius: 25px;
+            font-size: 1.2em;
+            text-align: center;
+            width: 100px;
+            margin: 0 10px;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(17, 153, 142, 0.3);
+        }
+
+        .results-section {
+            display: none;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .save-section {
+            background: #f8fbff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4facfe;
+        }
+
+        .save-btn, .load-btn, .export-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .save-btn:hover, .load-btn:hover, .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .history-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .history-item {
+            background: #f8fbff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #4facfe;
+        }
+
+        .history-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .history-item p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8em;
+            float: right;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .results-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .results-list {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e0e6ed;
+            font-size: 1.1em;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .setup-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎓 Savol Javob</h1>
+        <p>Istalgan sondagi savollar va talabalar ro'yxati bilan ochiq javob</p>
+    </div>
+
+    <!-- Ma'lumotlarni yuklash bo'limi -->
+    <div class="setup-section" id="setupSection">
+        <div class="upload-box">
+            <h3>📝 Savollar</h3>
+            <p>Har bir qatorda: faqat savol matni</p>
+            <textarea class="textarea-input" id="questionsInput" placeholder="2+2 nechiga teng?&#10;O'zbekiston poytaxti qaysi shahar?&#10;Yer nechanchi sayyora?&#10;Birinchi prezident kim edi?&#10;..."></textarea>
+            <button class="upload-btn" onclick="loadQuestions()">Savollarni Yuklash</button>
+            <div class="status" id="questionsStatus" style="display:none;"></div>
+        </div>
+
+        <div class="upload-box">
+            <h3>👥 Talabalar Ro'yxati</h3>
+            <p>Har bir qatorda: Ism Familiya</p>
+            <textarea class="textarea-input" id="studentsInput" placeholder="Akmal Karimov&#10;Sevara Tosheva&#10;Bobur Alimov&#10;Malika Rustamova&#10;..."></textarea>
+            <button class="upload-btn" onclick="loadStudents()">Talabalarni Yuklash</button>
+            <div class="status" id="studentsStatus" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Quiz boshlash bo'limi -->
+    <div class="start-section">
+        <button class="start-btn" id="startBtn" onclick="startQuiz()" disabled>🚀 Boshlash</button>
+        <p>Avval savollar va talabalar ro'yxatini yuklang</p>
+
+        <!-- Saqlangan natijalar tarixi tugmasi -->
+        <div style="margin-top: 20px;">
+            <button class="load-btn" onclick="showHistory()">📚 Saqlangan Natijalar Tarixini Ko'rish</button>
+        </div>
+    </div>
+
+    <!-- Quiz jarayoni -->
+    <div class="quiz-section" id="quizSection">
+        <div class="student-info" id="studentInfo"></div>
+        <div class="question-card" id="questionCard">
+            <div class="question-text" id="questionText"></div>
+            <div class="answer-area" id="answerArea">
+                <p>Talaba javob beradi...</p>
+                <div class="answer-box">
+                    <p>O'qituvchi talabaning javobini tinglaydi va ball qo'yadi</p>
+                </div>
+            </div>
+            <div class="grade-input">
+                <label>Talaba javobiga ball qo'ying: </label>
+                <input type="number" id="gradeInput" min="2" max="5" step="0.5" value="3">
+                <button class="next-btn" onclick="saveAndNext()">Keyingi Talaba ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Natijalar -->
+    <div class="results-section" id="resultsSection">
+        <div class="results-card">
+            <h2>🎉 Quiz Yakunlandi!</h2>
+            <p id="resultsSummary">Barcha javoblar baholandi</p>
+        </div>
+        <div class="results-list" id="resultsList"></div>
+
+        <!-- Natijalarni saqlash bo'limi -->
+        <div class="save-section">
+            <h3>💾 Natijalarni Saqlash</h3>
+            <p>Keyingi darslar uchun natijalarni saqlang</p>
+            <input type="text" id="sessionName" placeholder="Dars nomi (masalan: Matematika - 1-dars)" style="padding: 10px; width: 300px; border-radius: 5px; border: 2px solid #4facfe; margin: 10px;">
+            <br>
+            <button class="save-btn" onclick="saveResults()">💾 Natijalarni Saqlash</button>
+            <button class="export-btn" onclick="exportToJSON()">📁 JSON faylga Export</button>
+            <input type="file" id="jsonFileInput" class="file-input" accept=".json" onchange="importFromJSON()">
+            <button class="load-btn" onclick="document.getElementById('jsonFileInput').click()">📂 JSON fayldan Import</button>
+        </div>
+
+        <button class="start-btn" onclick="resetQuiz()">🔄 Qaytadan Boshlash</button>
+    </div>
+
+    <!-- Saqlangan natijalar tarixi -->
+    <div class="history-section" id="historySection" style="display: none;">
+        <h3>📚 Saqlangan Natijalar Tarixi</h3>
+        <button class="load-btn" onclick="toggleHistory()">Tarixni Ko'rish/Yashirish</button>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+    let questions = [];
+    let students = [];
+    let availableStudents = [];
+    let availableQuestions = [];
+    let currentQuestionIndex = 0;
+    let currentStudent = null;
+    let currentQuestion = null;
+    let results = [];
+    let savedSessions = [];
+
+    // Sahifa yuklanganda saqlangan ma'lumotlarni olish
+    window.onload = function() {
+        loadSavedSessions();
+    };
+
+    function loadQuestions() {
+        const input = document.getElementById('questionsInput').value.trim();
+        const status = document.getElementById('questionsStatus');
+
+        if (!input) {
+            showStatus('questionsStatus', 'Iltimos, savollarni kiriting!', 'error');
+            return;
+        }
+
+        const lines = input.split('\n').filter(line => line.trim());
+
+        questions = lines.map(line => ({
+            question: line.trim()
+        }));
+
+        showStatus('questionsStatus', `✅ ${questions.length} ta savol muvaffaqiyatli yuklandi!`, 'success');
+        checkReadyToStart();
+    }
+
+    function loadStudents() {
+        const input = document.getElementById('studentsInput').value.trim();
+        const status = document.getElementById('studentsStatus');
+
+        if (!input) {
+            showStatus('studentsStatus', 'Iltimos, talabalar ro\'yxatini kiriting!', 'error');
+            return;
+        }
+
+        const lines = input.split('\n').filter(line => line.trim());
+
+        students = lines.map(line => line.trim());
+        showStatus('studentsStatus', `✅ ${students.length} ta talaba muvaffaqiyatli yuklandi!`, 'success');
+        checkReadyToStart();
+    }
+
+    function showStatus(elementId, message, type) {
+        const status = document.getElementById(elementId);
+        status.textContent = message;
+        status.className = `status ${type}`;
+        status.style.display = 'block';
+    }
+
+    function checkReadyToStart() {
+        const startBtn = document.getElementById('startBtn');
+        if (questions.length > 0 && students.length > 0) {
+            startBtn.disabled = false;
+            startBtn.textContent = '🚀 Savollarni Boshlash (Tayyor!)';
+        }
+    }
+
+    function startQuiz() {
+        // Nusxalarni yaratish
+        availableStudents = [...students];
+        availableQuestions = [...questions];
+        currentQuestionIndex = 0;
+        results = [];
+
+        // Sahifalarni almashtirish
+        document.getElementById('setupSection').style.display = 'none';
+        document.querySelector('.start-section').style.display = 'none';
+        document.getElementById('historySection').style.display = 'none';
+        document.getElementById('quizSection').style.display = 'block';
+
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            showResults();
+            return;
+        }
+
+        // Talabalar tugasa, ro'yxatni qayta to'ldirish
+        if (availableStudents.length === 0) {
+            availableStudents = [...students];
+        }
+
+        // Random talaba tanlash
+        const randomStudentIndex = Math.floor(Math.random() * availableStudents.length);
+        currentStudent = availableStudents.splice(randomStudentIndex, 1)[0];
+
+        // Random savol tanlash
+        const randomQuestionIndex = Math.floor(Math.random() * availableQuestions.length);
+        currentQuestion = availableQuestions.splice(randomQuestionIndex, 1)[0];
+
+        // Interfeyni yangilash
+        document.getElementById('studentInfo').innerHTML = `
+                <h3>${currentStudent}</h3>
+                <p>Savol ${currentQuestionIndex + 1} / ${questions.length}</p>
+            `;
+
+        document.getElementById('questionText').textContent = currentQuestion.question;
+        document.getElementById('gradeInput').value = '3';
+        currentQuestionIndex++;
+    }
+
+    function saveAndNext() {
+        const grade = parseFloat(document.getElementById('gradeInput').value) || 3;
+
+        // Natijani saqlash
+        results.push({
+            student: currentStudent,
+            question: currentQuestion.question,
+            grade: grade
+        });
+
+        // Keyingi savolga o'tish
+        nextQuestion();
+    }
+
+    function showResults() {
+        document.getElementById('quizSection').style.display = 'none';
+        document.getElementById('resultsSection').style.display = 'block';
+
+        document.getElementById('resultsSummary').textContent = `Barcha ${results.length} ta javob baholandi`;
+
+        const resultsList = document.getElementById('resultsList');
+        resultsList.innerHTML = '<h3>📊 Quiz Natijalari</h3>';
+
+        results.forEach((result, index) => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `
+                    <span>${index + 1}. ${result.student}</span>
+                    <span>Ball: ${result.grade}</span>
+                `;
+            resultsList.appendChild(resultItem);
+        });
+
+        // O'rtacha ballni hisoblash
+        const averageGrade = (results.reduce((sum, result) => sum + result.grade, 0) / results.length).toFixed(1);
+        const averageItem = document.createElement('div');
+        averageItem.style.cssText = 'margin-top: 20px; padding: 15px; background: #e8f4fd; border-radius: 10px; font-weight: bold;';
+        averageItem.innerHTML = `O'rtacha ball: ${averageGrade}`;
+        resultsList.appendChild(averageItem);
+    }
+
+    // Natijalarni saqlash
+    function saveResults() {
+        const sessionName = document.getElementById('sessionName').value.trim();
+
+        if (!sessionName) {
+            alert('Iltimos, dars nomini kiriting!');
+            return;
+        }
+
+        const session = {
+            id: Date.now(),
+            name: sessionName,
+            date: new Date().toLocaleDateString('uz-UZ'),
+            time: new Date().toLocaleTimeString('uz-UZ'),
+            results: results,
+            averageGrade: (results.reduce((sum, result) => sum + result.grade, 0) / results.length).toFixed(1),
+            totalStudents: results.length
+        };
+
+        // Ma'lumotlarni localStorage ga saqlash
+        const savedData = JSON.parse(localStorage.getItem('quizSessions') || '[]');
+        savedData.push(session);
+        localStorage.setItem('quizSessions', JSON.stringify(savedData));
+
+        alert('✅ Natijalar muvaffaqiyatli saqlandi!');
+        document.getElementById('sessionName').value = '';
+
+        // Tarixni yangilash
+        loadSavedSessions();
+    }
+
+    // Saqlangan sessiyalarni yuklash
+    function loadSavedSessions() {
+        savedSessions = JSON.parse(localStorage.getItem('quizSessions') || '[]');
+        updateHistoryDisplay();
+    }
+
+    // Tarixni ko'rsatish
+    function showHistory() {
+        const historySection = document.getElementById('historySection');
+        historySection.style.display = 'block';
+
+        // Boshqa bo'limlarni yashirish
+        document.getElementById('setupSection').style.display = 'none';
+        document.querySelector('.start-section').style.display = 'none';
+        document.getElementById('resultsSection').style.display = 'none';
+
+        updateHistoryDisplay();
+    }
+
+    // Tarix displayni yangilash
+    function updateHistoryDisplay() {
+        const historyList = document.getElementById('historyList');
+
+        if (savedSessions.length === 0) {
+            historyList.innerHTML = '<p>Hali saqlangan natijalar yo\'q</p>';
+            return;
+        }
+
+        historyList.innerHTML = '';
+
+        savedSessions.reverse().forEach(session => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                    <button class="delete-btn" onclick="deleteSession(${session.id})">🗑️</button>
+                    <h4>${session.name}</h4>
+                    <p>📅 ${session.date} - ${session.time}</p>
+                    <p>👥 ${session.totalStudents} ta talaba | 📊 O'rtacha: ${session.averageGrade} ball</p>
+                    <button class="load-btn" style="margin-top: 10px;" onclick="viewSessionDetails(${session.id})">📋 Batafsil Ko'rish</button>
+                `;
+            historyList.appendChild(historyItem);
+        });
+
+        savedSessions.reverse(); // Asl tartibga qaytarish
+    }
+
+    // Sessiya detaillarini ko'rish
+    function viewSessionDetails(sessionId) {
+        const session = savedSessions.find(s => s.id === sessionId);
+        if (!session) return;
+
+        let details = `📚 ${session.name}\\n📅 ${session.date} - ${session.time}\\n\\n📊 Natijalar:\\n`;
+        session.results.forEach((result, index) => {
+            details += `${index + 1}. ${result.student}: ${result.grade} ball\\n`;
+        });
+        details += `\\n🎯 O'rtacha ball: ${session.averageGrade}`;
+
+        alert(details);
+    }
+
+    // Sessiyani o'chirish
+    function deleteSession(sessionId) {
+        if (!confirm('Bu natijani o\'chirishni xohlaysizmi?')) return;
+
+        savedSessions = savedSessions.filter(s => s.id !== sessionId);
+        localStorage.setItem('quizSessions', JSON.stringify(savedSessions));
+        updateHistoryDisplay();
+
+        alert('✅ Natija o\'chirildi!');
+    }
+
+    // JSON ga export qilish
+    function exportToJSON() {
+        if (results.length === 0) {
+            alert('Avval quiz ni yakunlang!');
+            return;
+        }
+
+        const sessionName = document.getElementById('sessionName').value.trim() || 'Quiz Natijalari';
+        const exportData = {
+            name: sessionName,
+            date: new Date().toLocaleDateString('uz-UZ'),
+            time: new Date().toLocaleTimeString('uz-UZ'),
+            results: results,
+            averageGrade: (results.reduce((sum, result) => sum + result.grade, 0) / results.length).toFixed(1)
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${sessionName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // JSON dan import qilish
+    function importFromJSON() {
+        const fileInput = document.getElementById('jsonFileInput');
+        const file = fileInput.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+
+                // Saqlangan ma'lumotlarga qo'shish
+                const session = {
+                    id: Date.now(),
+                    name: importedData.name,
+                    date: importedData.date,
+                    time: importedData.time,
+                    results: importedData.results,
+                    averageGrade: importedData.averageGrade,
+                    totalStudents: importedData.results.length
+                };
+
+                savedSessions.push(session);
+                localStorage.setItem('quizSessions', JSON.stringify(savedSessions));
+                updateHistoryDisplay();
+
+                alert('✅ JSON fayl muvaffaqiyatli import qilindi!');
+            } catch (error) {
+                alert('❌ Fayl formatida xatolik bor!');
+            }
+        };
+        reader.readAsText(file);
+
+        // Input ni tozalash
+        fileInput.value = '';
+    }
+
+    function resetQuiz() {
+        // Barcha o'zgaruvchilarni tozalash
+        questions = [];
+        students = [];
+        availableStudents = [];
+        availableQuestions = [];
+        currentQuestionIndex = 0;
+        results = [];
+
+        // Sahifalarni qaytarish
+        document.getElementById('resultsSection').style.display = 'none';
+        document.getElementById('historySection').style.display = 'none';
+        document.getElementById('setupSection').style.display = 'grid';
+        document.querySelector('.start-section').style.display = 'block';
+
+        // Inputlarni tozalash
+        document.getElementById('questionsInput').value = '';
+        document.getElementById('studentsInput').value = '';
+        document.getElementById('questionsStatus').style.display = 'none';
+        document.getElementById('studentsStatus').style.display = 'none';
+
+        // Start tugmasini o'chirish
+        const startBtn = document.getElementById('startBtn');
+        startBtn.disabled = true;
+        startBtn.textContent = '🚀 Quiz Boshlash';
+    }
+</script>
+</body>
+</html>
