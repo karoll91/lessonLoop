@@ -24,7 +24,7 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 | Auth | Sanctum token | Mobil va web uchun bitta API |
 | Excel | maatwebsite/excel 4.0 | Import va jurnal eksporti |
 | Doska (`board/`) | React 19 + TypeScript + Vite, laravel-echo + pusher-js, qrcode, Vitest | Faza 3 da qilindi |
-| Web admin | React + TypeScript + Vite | Hali boshlanmagan |
+| Web admin (`admin/`) | React 19 + TypeScript + Vite, react-router, TanStack Query, Vitest | Faza 4 da qilindi |
 | Mobil | Flutter | Hali boshlanmagan |
 
 ## Lokal muhit
@@ -34,21 +34,25 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 - **MySQL:** OpenServer panelidan MySQL-8.0 yoqiladi (port 3306, root, parolsiz).
 - **Demo ma'lumot:** `php artisan migrate:fresh --seed` — login `admin`, parol `password` (faqat lokal).
 
-Ishga tushirish (loyiha ildizida, uchta alohida terminal; `.claude/launch.json` da ham bor):
+Ishga tushirish (loyiha ildizida, har biri alohida terminalda; `.claude/launch.json` da ham bor):
 
 ```bash
 /d/php83/php.exe backend/artisan serve --host=0.0.0.0 --port=8000
 /d/php83/php.exe backend/artisan reverb:start --host=0.0.0.0 --port=8080
 npm --prefix board run dev -- --port 5173 --host 0.0.0.0
+npm --prefix admin run dev -- --port 5174 --host 0.0.0.0
 ```
 
 Doska: brauzerda `http://<kompyuter-IP>:5173` → to'liq ekran uchun **F**, mavzu uchun **T**. Doska tokeni brauzerda saqlanadi, qayta yuklanganda o'sha sessiya tiklanadi. Sozlamalar `board/.env` da (`board/.env.example` nusxasi): API manzili, Reverb kaliti, doska nomi.
+
+Admin panel: `http://localhost:5174` (demo: `admin` / `password`). Sozlamalar `admin/.env` da (`admin/.env.example` nusxasi): API va doska manzili.
 
 Testlar:
 
 ```bash
 /d/php83/php.exe backend/artisan test --compact
 npm --prefix board test
+npm --prefix admin test
 ```
 
 ## Asosiy qarorlar
@@ -99,14 +103,22 @@ npm --prefix board test
 - Birinchi sinovda doska bir marta WebSocket xabarini olmadi (keyingi barcha urinishlarda keldi, sababi topilmadi); 30 soniyalik zaxira so'rov buni yopadi, lekin kuzatib borish kerak.
 - Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak.
 
+### Faza 4 — Web admin panel ✅
+- `admin/` — React + Vite, react-router, TanStack Query. Sahifalar: W1 kirish (+ vaqtinchalik parolni almashtirish), W2 bosh sahifa, W3 guruhlar va guruh kurslari (fan + o'qituvchi biriktirish), W4 fanlar va mavzular (tartibni o'zgartirish), W5 talabalar (kurs bo'yicha navbat holati, import: oldin tekshirish, keyin saqlash, shablon), W6 savollar banki va muharrir (A–D variantlar, import), W7 darslar tarixi va dars tafsiloti (bahoni sabab bilan tuzatish, tuzatish tarixi), W8 jurnal (xlsx/csv eksport), W9 hisobotlar, W10 foydalanuvchilar (faqat admin; vaqtinchalik parol bir marta ko'rsatiladi, bloklash), W11 sozlamalar (random qoidalari, mavzu, parol), W12 404, kutilmagan xato, internet uzilishi va server ishlamay qolishi holatlari.
+- Backend'ga qo'shildi: `GET /courses/{course}/report` (darslar bo'yicha o'rtacha, ballar taqsimoti, qamrov, mavzular, eng qiyin savollar), dars tafsilotida guruh va fan nomi, CORS preflight keshi (2 soat) va `Content-Disposition` sarlavhasi (eksport fayl nomi uchun).
+- Barcha sahifalarda yuklanish, bo'sh holat, xato va validatsiya xabarlari; light/dark.
+- 6 ta Vitest testi (kirish xatolari, API xato xabarlari, import oqimi, savol muharriri); brauzerda backend bilan tekshirilgan.
+
+**Jami: 71 ta API route (broadcasting auth bilan), 126 ta backend testi (423 tekshiruv), 14 ta doska va 6 ta admin testi — hammasi o'tadi.**
+
+**Ochiq masalalar:**
+- `artisan serve` bir oqimli, admin sahifalari 1–3 soniyada ochiladi. Ishga tushirishda (Faza 6) Apache/Nginx + PHP-FPM orqali ishlatish kerak.
+- Kichik ekranda (< 860px) keng jadvallar gorizontal suriladi; telefon uchun alohida ko'rinish yo'q (o'qituvchi telefonda Flutter ilovasidan foydalanadi).
+
 ## Keyingi reja
 
 Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyin admin panel, oxirida mobil ilova. Har bir bosqich oxirida testlar o'tishi va shu fayl yangilanishi shart.
 
-
-### Faza 4 — Web admin panel (React)
-- [ ] W1–W12: kirish, dashboard, guruhlar, fanlar/mavzular, talabalar + import, savollar banki + muharrir, darslar tarixi, jurnal, hisobotlar, foydalanuvchilar, sozlamalar, xato sahifalari.
-- [ ] UI Kit komponentlari (Sidebar, Banner, Toast, EmptyState …), light/dark.
 
 ### Faza 5 — Flutter mobil ilova (o'qituvchi + pult)
 - [ ] M1–M13 va pult ekranlari (D-seriyadagi telefon tomoni).

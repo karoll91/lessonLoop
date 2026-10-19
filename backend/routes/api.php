@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\QuestionController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudyGroupController;
@@ -52,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/courses/{course}/journal', [JournalController::class, 'show'])->name('courses.journal');
     Route::get('/courses/{course}/journal/export', [JournalController::class, 'export'])->name('courses.journal.export');
+    Route::get('/courses/{course}/report', ReportController::class)->name('courses.report');
 
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 

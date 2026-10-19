@@ -64,7 +64,7 @@ class LessonController extends Controller
     {
         Gate::authorize('view', $lesson);
 
-        return LessonResource::make($lesson->load(['topics', 'answers.student', 'answers.question.options', 'answers.edits.user']));
+        return LessonResource::make($lesson->load(['course.studyGroup', 'course.subject', 'topics', 'answers.student', 'answers.question.options', 'answers.edits.user']));
     }
 
     public function draw(Lesson $lesson): JsonResponse

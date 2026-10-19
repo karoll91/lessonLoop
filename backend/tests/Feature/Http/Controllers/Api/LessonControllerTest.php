@@ -128,6 +128,21 @@ class LessonControllerTest extends TestCase
             ->assertJsonPath('data.1.id', $older->id);
     }
 
+    public function test_show_returns_the_group_subject_and_answers_with_their_edit_window(): void
+    {
+        ['teacher' => $teacher, 'course' => $course, 'students' => $students] = $this->courseSetup();
+        $lesson = Lesson::factory()->finished()->for($course)->create(['sequence' => 1, 'teacher_id' => $teacher->id]);
+        Answer::factory()->graded(75)->for($lesson)->for($students[0])->create();
+        Sanctum::actingAs($teacher);
+
+        $this->getJson(route('lessons.show', $lesson))
+            ->assertOk()
+            ->assertJsonPath('data.group', $course->studyGroup->name)
+            ->assertJsonPath('data.subject', $course->subject->name)
+            ->assertJsonPath('data.answers.0.score', 75)
+            ->assertJsonPath('data.answers.0.student.full_name', $students[0]->full_name);
+    }
+
     public function test_history_filters_by_date_range(): void
     {
         ['teacher' => $teacher, 'course' => $course] = $this->courseSetup();
