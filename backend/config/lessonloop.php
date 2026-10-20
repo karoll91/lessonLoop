@@ -47,4 +47,11 @@ return [
 
     'controller_timeout' => (int) env('LESSONLOOP_CONTROLLER_TIMEOUT', 45),
 
+    /*
+    | Board sessions not seen for this many hours are deleted by the daily
+    | `model:prune` (closed browser tabs).
+    */
+
+    'board_prune_hours' => (int) env('LESSONLOOP_BOARD_PRUNE_HOURS', 24),
+
 ];

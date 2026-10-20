@@ -105,7 +105,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 **Ochiq masalalar:**
 - ~~D9 dizaynidagi «Pult uzildi» (telefon aloqasi yo'qolgani) hali yo'q~~ — Faza 5b'da qilindi.
 - Birinchi sinovda doska bir marta WebSocket xabarini olmadi (keyingi barcha urinishlarda keldi, sababi topilmadi); 30 soniyalik zaxira so'rov buni yopadi, lekin kuzatib borish kerak.
-- Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak.
+- ~~Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak~~ — `BoardSession` `Prunable`: 24 soat (`LESSONLOOP_BOARD_PRUNE_HOURS`) ko'rinmagan sessiyalar har kuni `model:prune` bilan o'chadi (`schedule:run` ishga tushirilgan bo'lishi kerak, Faza 6).
 
 ### Faza 4 — Web admin panel ✅
 - `admin/` — React + Vite, react-router, TanStack Query. Sahifalar: W1 kirish (+ vaqtinchalik parolni almashtirish), W2 bosh sahifa, W3 guruhlar va guruh kurslari (fan + o'qituvchi biriktirish), W4 fanlar va mavzular (tartibni o'zgartirish), W5 talabalar (kurs bo'yicha navbat holati, import: oldin tekshirish, keyin saqlash, shablon), W6 savollar banki va muharrir (A–D variantlar, import), W7 darslar tarixi va dars tafsiloti (bahoni sabab bilan tuzatish, tuzatish tarixi), W8 jurnal (xlsx/csv eksport), W9 hisobotlar, W10 foydalanuvchilar (faqat admin; vaqtinchalik parol bir marta ko'rsatiladi, bloklash), W11 sozlamalar (random qoidalari, mavzu, parol), W12 404, kutilmagan xato, internet uzilishi va server ishlamay qolishi holatlari.
@@ -143,7 +143,7 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
   - Doska holatida `controller_online`, `controller_seen_seconds_ago` (nisbiy — doska kompyuteri soati noto'g'ri bo'lsa ham ishlaydi) va `controller_timeout` (45 s, `LESSONLOOP_CONTROLLER_TIMEOUT`). Har bir heartbeat doskaga kichik `board.controller-seen` hodisasini yuboradi; pult uzilgan bo'lsa — to'liq `board.updated`.
   - Doska 45 soniya heartbeat kelmasa oxirgi ekran ustida «Pult uzildi» kartasini va yuqorida «Pult uzildi» belgisini ko'rsatadi; server bilan aloqa yo'q bo'lsa faqat server ogohlantirishi chiqadi.
   - Testlar: +6 backend (132 ta, 446 tekshiruv), +7 doska Vitest (21 ta), +5 Flutter (17 ta); `flutter analyze` toza. 73 ta API route.
-  - Ochiq: haqiqiy telefonda ilova fonga o'tganda heartbeat to'xtaydi — doska «Pult uzildi» ko'rsatadi, telefon qaytganda o'zi tiklanadi (kutilgan xatti-harakat, lekin sinab ko'rish kerak). Brauzerda end-to-end tekshirilmagan, faqat testlar bilan. Ishlayotgan bazada `php artisan migrate` kerak.
+  - Ochiq: haqiqiy telefonda ilova fonga o'tganda heartbeat to'xtaydi — doska «Pult uzildi» ko'rsatadi, telefon qaytganda o'zi tiklanadi (kutilgan xatti-harakat, lekin sinab ko'rish kerak). Brauzerda backend + Reverb bilan tekshirildi: birinchi heartbeat to'liq `board.updated`, keyingilari `board.controller-seen`, 45 soniyadan keyin «Pult uzildi».
 - [ ] Offline baholash va sinxron (`POST /sync`, idempotent `client_uuid`) — PRD'dagi 2-bosqich.
 - [ ] Kirill va rus tillari, Manrope shrifti.
 

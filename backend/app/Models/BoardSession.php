@@ -6,8 +6,10 @@ use App\Enums\BoardScreen;
 use Database\Factories\BoardSessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['token', 'name', 'pair_code', 'pair_code_expires_at', 'controller_id', 'lesson_id', 'answer_id', 'screen', 'options', 'last_seen_at', 'controller_seen_at'])]
@@ -15,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BoardSession extends Model
 {
     /** @use HasFactory<BoardSessionFactory> */
-    use HasFactory;
+    use HasFactory, Prunable;
 
     /**
      * Default display options for the classroom board.
@@ -67,6 +69,22 @@ class BoardSession extends Model
     public function answer(): BelongsTo
     {
         return $this->belongsTo(Answer::class);
+    }
+
+    /**
+     * Board tabs that were closed long ago. The board polls its state every
+     * 30 s, so a session not seen for a day is gone; if that browser comes
+     * back it simply opens a new session (the old token answers 404).
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        $before = now()->subHours((int) config('lessonloop.board_prune_hours'));
+
+        return static::query()->where(fn (Builder $query) => $query
+            ->where('last_seen_at', '<', $before)
+            ->orWhere(fn (Builder $query) => $query->whereNull('last_seen_at')->where('created_at', '<', $before)));
     }
 
     public function option(string $key): mixed
