@@ -1,6 +1,6 @@
 # LessonLoop — loyiha rejasi va holati
 
-> Oxirgi yangilanish: 2026-10-19. Har bir bosqich tugaganda shu fayl yangilanadi.
+> Oxirgi yangilanish: 2026-10-20. Har bir bosqich tugaganda shu fayl yangilanadi.
 
 LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorlashi uchun tizim: adolatli random so'rov, 0–100 ball, savollar banki, elektron doskada talabalar ekrani va telefondan boshqaruv (pult).
 
@@ -25,11 +25,12 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 | Excel | maatwebsite/excel 4.0 | Import va jurnal eksporti |
 | Doska (`board/`) | React 19 + TypeScript + Vite, laravel-echo + pusher-js, qrcode, Vitest | Faza 3 da qilindi |
 | Web admin (`admin/`) | React 19 + TypeScript + Vite, react-router, TanStack Query, Vitest | Faza 4 da qilindi |
-| Mobil | Flutter | Hali boshlanmagan |
+| Mobil (`mobile/`) | Flutter 3.47 (Dart 3.13), Riverpod 3, Dio, mobile_scanner | Faza 5 da qilindi |
 
 ## Lokal muhit
 
 - **PHP 8.3:** `D:\php83\php.exe`. OpenServer 5'da eng yangi PHP 8.1; OpenServer o'z papkasidagi PHP'ni o'z wrapper'i bilan almashtirib yuboradi, shuning uchun PHP 8.3 OpenServer'dan tashqarida turadi.
+- **Flutter 3.47.7:** `D:\flutter` (rasmiy zip, PATH'ga qo'shilmagan: `D:\flutter\bin\flutter.bat`). Android SDK hali o'rnatilmagan — APK uchun Android Studio kerak.
 - **Composer:** `D:\php83\composer.bat` (OpenServer'ning `composer.phar` faylidan foydalanadi).
 - **MySQL:** OpenServer panelidan MySQL-8.0 yoqiladi (port 3306, root, parolsiz).
 - **Demo ma'lumot:** `php artisan migrate:fresh --seed` — login `admin`, parol `password` (faqat lokal).
@@ -53,7 +54,10 @@ Testlar:
 /d/php83/php.exe backend/artisan test --compact
 npm --prefix board test
 npm --prefix admin test
+(cd mobile && /d/flutter/bin/flutter test)
 ```
+
+Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`, keyin `.claude/launch.json` dagi `mobile-web` (port 5180). Telefonda server manzili login ekranida kiritiladi: `http://<kompyuter-IP>:8000/api`.
 
 ## Asosiy qarorlar
 
@@ -115,15 +119,28 @@ npm --prefix admin test
 - `artisan serve` bir oqimli, admin sahifalari 1–3 soniyada ochiladi. Ishga tushirishda (Faza 6) Apache/Nginx + PHP-FPM orqali ishlatish kerak.
 - Kichik ekranda (< 860px) keng jadvallar gorizontal suriladi; telefon uchun alohida ko'rinish yo'q (o'qituvchi telefonda Flutter ilovasidan foydalanadi).
 
+### Faza 5 — Flutter mobil ilova (o'qituvchi + pult) ✅
+- `mobile/` — Flutter (Android, iOS, web, Windows). Ekranlar: M1 splash + onboarding + mavzu tanlash, M2 kirish (server manzilini o'zgartirish, vaqtinchalik parolni almashtirish), M3 bosh sahifa (davom etayotgan dars, ko'rsatkichlar, bugungi darslar, doska holati), M4/M10 guruhlar va talabalar navbat holati bo'yicha filtr bilan, talaba kartasi (dam olish progressi, baholar), M5 dars sozlash (kurs va mavzular → savollar soni → davomat), M6–M8 random baraban, savol (javob standart yashirin), test variantlari, slider + tez tugmalar bilan baholash, o'tkazish (javob bermadi / yo'q ekan / boshqa talaba), M9 xulosa, M11 savollar banki + yangi savol, M12 tarix + bahoni sabab bilan tuzatish, M13 sozlamalar (mavzu, random qoidalari — admin o'zgartiradi, server, parol, chiqish).
+- Pult: QR (`lessonloop://pair?code=…`) yoki 6 xonali kod bilan ulanish; darsning har qadami doskaga yuboriladi (random, savol, javob, baho, yakun), menyuda tanaffus, qora ekran va doska sozlamalari (ism, javob, bahoni ko'rsatish).
+- 12 ta Flutter testi (pair kodi, modellar, API xatolari, kirish ekrani); `flutter analyze` toza; brauzerda backend va doska bilan to'liq dars end-to-end tekshirilgan (light va dark).
+
+**Ochiq masalalar:**
+- Offline baholash va sinxron (`POST /sync`, `client_uuid`) — hali yo'q; internet uzilsa xato xabari chiqadi.
+- Telefon doska ulanishini xotirada saqlaydi: ilova qayta ochilsa doskaga qayta ulanish kerak (doska o'zi ulangan holatda qoladi).
+- Telefon heartbeat va doskadagi «Pult uzildi» ekrani yo'q.
+- Android APK yig'ilmagan (Android SDK yo'q); kamera bilan QR faqat haqiqiy telefonda tekshiriladi.
+- Til tanlash (kirill, rus) va Manrope shrifti qo'shilmagan — hozircha lotin o'zbek va tizim shrifti.
+
 ## Keyingi reja
 
 Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyin admin panel, oxirida mobil ilova. Har bir bosqich oxirida testlar o'tishi va shu fayl yangilanishi shart.
 
 
-### Faza 5 — Flutter mobil ilova (o'qituvchi + pult)
-- [ ] M1–M13 va pult ekranlari (D-seriyadagi telefon tomoni).
-- [ ] Riverpod, Dio, Echo/Pusher klient, light/dark.
+### Faza 5b — Mobil ilovani yakunlash
+- [ ] Android SDK + APK, haqiqiy telefonda QR va Wi-Fi orqali sinov.
+- [ ] Doska ulanishini saqlash va qayta tiklash, telefon heartbeat + «Pult uzildi» (D9).
 - [ ] Offline baholash va sinxron (`POST /sync`, idempotent `client_uuid`) — PRD'dagi 2-bosqich.
+- [ ] Kirill va rus tillari, Manrope shrifti.
 
 ### Faza 6 — Ishga tushirish
 - [ ] OpenServer domenlari: `api.lessonloop.loc`, `board.lessonloop.loc`, `admin.lessonloop.loc`.
@@ -134,8 +151,8 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
 
 Quyidagilar taxmin bilan qilingan; javobingizga qarab o'zgaradi:
 
-1. Talabalar ilovaga kiradimi? — hozircha yo'q, faqat o'qituvchi.
-2. «4 darsda 1 marta» har fan uchun alohidami? — ha, kurs (guruh + fan) bo'yicha.
+1. Talabalar ilovaga kiradimi? — yo'q, faqat o'qituvchi.
+2. «4 darsda 1 marta» har fan uchun alohidami? — ha, kurs guruh + fan bo'yicha.
 3. 60 dan past olgan talaba keyingi darsda majburan so'raladimi? — yo'q, ×2 vazn bilan randomga qaytadi.
 4. Bir talabaga bir darsda bir nechta savol? — yo'q, 1 talaba = 1 savol.
-5. Ballar HEMIS'ga eksport qilinadimi? — hozircha Excel yetarli.
+5. Ballar HEMIS'ga eksport qilinadimi? — manda hemis API yo'q imkoni bo'lsa qilinadi

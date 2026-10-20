@@ -55,6 +55,13 @@
         "0.0.0.0"
       ],
       "port": 5174
+    },
+    {
+      "name": "mobile-web",
+      "runtimeExecutable": "D:/php83/php.exe",
+      "runtimeArgs": ["-S", "0.0.0.0:5180", "-t", "mobile/build/web"],
+      "port": 5180,
+      "autoPort": false
     }
   ]
 }
