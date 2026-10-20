@@ -125,7 +125,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 - 12 ta Flutter testi (pair kodi, modellar, API xatolari, kirish ekrani); `flutter analyze` toza; brauzerda backend va doska bilan to'liq dars end-to-end tekshirilgan (light va dark).
 
 **Ochiq masalalar:**
-- Offline baholash va sinxron (`POST /sync`, `client_uuid`) — hali yo'q; internet uzilsa xato xabari chiqadi.
+- ~~Offline baholash va sinxron~~ — Faza 5b'da qilindi.
 - ~~Telefon doska ulanishini xotirada saqlaydi~~ va ~~heartbeat / «Pult uzildi» yo'q~~ — Faza 5b'da qilindi.
 - Android APK yig'ilmagan (Android SDK yo'q); kamera bilan QR faqat haqiqiy telefonda tekshiriladi.
 - Til tanlash (kirill, rus) va Manrope shrifti qo'shilmagan — hozircha lotin o'zbek va tizim shrifti.
@@ -144,7 +144,13 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
   - Doska 45 soniya heartbeat kelmasa oxirgi ekran ustida «Pult uzildi» kartasini va yuqorida «Pult uzildi» belgisini ko'rsatadi; server bilan aloqa yo'q bo'lsa faqat server ogohlantirishi chiqadi.
   - Testlar: +6 backend (132 ta, 446 tekshiruv), +7 doska Vitest (21 ta), +5 Flutter (17 ta); `flutter analyze` toza. 73 ta API route.
   - Ochiq: haqiqiy telefonda ilova fonga o'tganda heartbeat to'xtaydi — doska «Pult uzildi» ko'rsatadi, telefon qaytganda o'zi tiklanadi (kutilgan xatti-harakat, lekin sinab ko'rish kerak). Brauzerda backend + Reverb bilan tekshirildi: birinchi heartbeat to'liq `board.updated`, keyingilari `board.controller-seen`, 45 soniyadan keyin «Pult uzildi».
-- [ ] Offline baholash va sinxron (`POST /sync`, idempotent `client_uuid`) — PRD'dagi 2-bosqich.
+- [x] Offline baholash va sinxron (`POST /sync`, idempotent `client_uuid`) — PRD'dagi 2-bosqich.
+  - Telefon har bir baho/o'tkazishga `client_uuid` beradi. Internet bo'lmasa amal telefonda (`SharedPreferences`, `outbox`) saqlanadi, ekranda baholangan bo'lib ko'rinadi va «N ta baho telefonda saqlangan» ogohlantirishi chiqadi; har 15 soniyada va ilova ochilganda `POST /sync` bilan yuboriladi.
+  - Backend: `sync_operations` jadvali (`user_id` + `client_uuid` unikal) — bir xil amal ikki marta kelsa birinchi natija qaytadi. `POST /answers/{id}/grade|skip` ham ixtiyoriy `client_uuid` qabul qiladi (javob yo'qolib qayta yuborilsa ikki marta baholanmaydi). `performed_at` — baho qo'yilgan haqiqiy vaqt (`graded_at`, 24 soatlik tahrir muddati shundan hisoblanadi).
+  - Yopilgan javob, boshqa o'qituvchining darsi kabi rad etilgan amallar talaba ismi bilan ko'rsatiladi; qolganlari baribir qo'llanadi.
+  - Cheklov: random (keyingi talaba), qayta tanlash va darsni yakunlash serversiz ishlamaydi — ulardan oldin saqlangan baholar yuborilishi shart. Offline baholanganda doska yangilanmaydi.
+  - Chiqishda yuborilmagan baholar bo'lsa ogohlantiriladi.
+  - Testlar: +6 backend (139 ta, 480 tekshiruv), +5 Flutter (22 ta). Haqiqiy telefonda internetni o'chirib sinash qoldi.
 - [ ] Kirill va rus tillari, Manrope shrifti.
 
 ### Faza 6 — Ishga tushirish

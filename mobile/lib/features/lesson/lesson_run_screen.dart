@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
 import '../../core/models.dart';
+import '../../core/outbox.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../ui/widgets.dart';
@@ -37,7 +38,18 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   ApiClient get _api => ref.read(apiProvider);
   BoardController get _board => ref.read(boardProvider.notifier);
   bool get _hasBoard => ref.read(boardProvider) != null;
+  OutboxController get _outbox => ref.read(outboxProvider.notifier);
+  int get _passScore => ref.read(rulesProvider).value?.passScore ?? 60;
 
+  /// Grades saved on the phone must reach the server before the next draw,
+  /// redraw or finish: those need the server anyway, and finishing would
+  /// drop a still-pending answer.
+  Future<void> _sendQueued() async {
+    await _outbox.flush();
+    if (ref.read(outboxProvider).hasLesson(widget.lessonId)) {
+      throw ApiException(0, "Telefonda saqlangan baholar hali yuborilmadi. Internet ulanishini tekshiring.");
+    }
+  }
   @override
   void initState() {
     super.initState();
@@ -55,10 +67,13 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
       _loadError = null;
     });
     try {
+      await _outbox.flush();
       final lesson = await _fetch();
+      final queued = ref.read(outboxProvider).pending.map((operation) => operation.answerId).toSet();
       setState(() {
         _lesson = lesson;
-        _current = lesson.pending;
+        // An answer graded offline is still pending on the server.
+        _current = queued.contains(lesson.pending?.id) ? null : lesson.pending;
         _phase = lesson.isFinished ? _Phase.finished : (_current == null ? _Phase.idle : _Phase.question);
       });
       // The board follows the lesson opened on the phone.
@@ -96,6 +111,7 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   }
 
   Future<void> _draw() => _run(() async {
+    await _sendQueued();
     setState(() {
       _phase = _Phase.drawing;
       _revealed = false;
@@ -136,13 +152,11 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   });
 
   Future<void> _grade({int? score, String? option, String? comment}) => _run(() async {
-    final answer = _current!;
-    final response = await _api.post('/answers/${answer.id}/grade', {
-      'score': ?score,
-      'chosen_option': ?option,
-      if (comment != null && comment.isNotEmpty) 'comment': comment,
-    });
-    final graded = Answer.fromJson(response['data'] as Json);
+    final operation = _operation('grade', score: score, chosenOption: option, comment: comment);
+    final graded = await _send('/answers/${operation.answerId}/grade', operation);
+    if (graded == null) {
+      return;
+    }
     if (_hasBoard) {
       await _board.command('show_score');
     }
@@ -150,15 +164,61 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   });
 
   Future<void> _skip(String reason) => _run(() async {
-    final response = await _api.post('/answers/${_current!.id}/skip', {'reason': reason});
+    final skipped = await _send('/answers/${_current!.id}/skip', _operation('skip', reason: reason));
+    if (skipped == null) {
+      return;
+    }
     if (_hasBoard) {
       // The skipped student's question leaves the board.
       await _board.command('show_lobby');
     }
-    await _afterAnswer(Answer.fromJson(response['data'] as Json));
+    await _afterAnswer(skipped);
   });
 
+  PendingOperation _operation(String type, {int? score, String? chosenOption, String? comment, String? reason}) {
+    final answer = _current!;
+    return PendingOperation(
+      clientUuid: uuidV4(),
+      type: type,
+      answerId: answer.id,
+      lessonId: widget.lessonId,
+      performedAt: DateTime.now(),
+      score: score,
+      chosenOption: chosenOption,
+      comment: comment,
+      reason: reason,
+      studentName: answer.studentName,
+    );
+  }
+
+  /// Grade or skip online. Without a connection the operation is kept on the
+  /// phone (null is returned) and sent later with the same client_uuid.
+  Future<Answer?> _send(String path, PendingOperation operation) async {
+    final body = Map<String, dynamic>.of(operation.toRequest())..removeWhere((key, _) => key == 'type' || key == 'answer_id' || key == 'performed_at');
+    try {
+      final response = await _api.post(path, body);
+      return Answer.fromJson(response['data'] as Json);
+    } on ApiException catch (error) {
+      if (!error.isOffline) {
+        rethrow;
+      }
+    }
+    await _outbox.add(operation);
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _last = operation.toLocalAnswer(passScore: _passScore);
+      _current = null;
+      _revealed = false;
+      _phase = _Phase.idle;
+    });
+    if (mounted) {
+      showMessage(context, "Internet yo'q. Baho telefonda saqlandi va aloqa tiklanganda o'zi yuboriladi.");
+    }
+    return null;
+  }
+
   Future<void> _redraw() => _run(() async {
+    await _sendQueued();
     setState(() {
       _phase = _Phase.drawing;
       _revealed = false;
@@ -199,6 +259,7 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   }
 
   Future<void> _finish() => _run(() async {
+    await _sendQueued();
     if (_hasBoard) {
       await _board.command('finish');
     } else {
@@ -263,12 +324,35 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   }
 
   Widget _running(Lesson lesson) {
-    final used = lesson.scored.length;
+    final outbox = ref.watch(outboxProvider);
+    final scoredIds = lesson.scored.map((answer) => answer.id).toSet();
+    final queued = outbox.pending.where((operation) => operation.lessonId == lesson.id && !scoredIds.contains(operation.answerId)).toList();
+    final used = lesson.scored.length + queued.where((operation) => operation.reason != 'absent').length;
     final c = context.colors;
     final rules = ref.watch(rulesProvider).value;
 
     return Column(
       children: [
+        if (queued.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Banner2(
+              "${queued.length} ta baho telefonda saqlangan, hali yuborilmagan",
+              tone: Tone.warn,
+              icon: Icons.cloud_off_outlined,
+              action: 'Yuborish',
+              onAction: () => _run(() async {
+                if (await _outbox.flush() && mounted) {
+                  showMessage(context, 'Baholar yuborildi');
+                }
+              }),
+            ),
+          ),
+        if (outbox.rejected.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Banner2("Saqlanmadi — ${outbox.rejected.join('; ')}", tone: Tone.danger, action: 'Yopish', onAction: _outbox.dismissRejected),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Row(

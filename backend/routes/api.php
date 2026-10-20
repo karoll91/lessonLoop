@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\StudyGroupController;
 use App\Http\Controllers\Api\SubjectController;
+use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\TopicController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/answers/{answer}/grade', [AnswerController::class, 'grade'])->name('answers.grade');
     Route::patch('/answers/{answer}', [AnswerController::class, 'update'])->name('answers.update');
     Route::post('/answers/{answer}/skip', [AnswerController::class, 'skip'])->name('answers.skip');
+    // Grades and skips the phone queued while offline.
+    Route::post('/sync', SyncController::class)->name('sync');
     Route::post('/answers/{answer}/redraw', [AnswerController::class, 'redraw'])->name('answers.redraw');
 
     /*

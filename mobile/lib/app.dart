@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/api.dart';
+import 'core/outbox.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
 import 'features/auth/auth_screens.dart';
@@ -35,6 +36,10 @@ class AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Keeps the offline outbox alive, so grades queued before a restart are
+    // sent in the background as soon as the server answers.
+    ref.listen(outboxProvider, (_, _) {});
+
     final settings = ref.watch(settingsProvider);
     if (!settings.onboardingSeen) {
       return const OnboardingScreen();

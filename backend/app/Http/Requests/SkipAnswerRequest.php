@@ -25,6 +25,8 @@ class SkipAnswerRequest extends FormRequest
         return [
             'reason' => ['required', 'string', 'in:no_answer,absent'],
             'comment' => ['nullable', 'string', 'max:1000'],
+            // Makes a retried request safe: it is applied only once.
+            'client_uuid' => ['nullable', 'uuid'],
         ];
     }
 }

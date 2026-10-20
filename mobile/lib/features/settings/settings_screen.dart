@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
 import '../../core/models.dart';
+import '../../core/outbox.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../ui/widgets.dart';
@@ -109,14 +110,23 @@ class SettingsScreen extends ConsumerWidget {
                   style: TextStyle(color: c.danger, fontWeight: FontWeight.w700),
                 ),
                 onTap: () async {
+                  final outbox = ref.read(outboxProvider.notifier);
+                  await outbox.flush();
+                  final unsent = ref.read(outboxProvider).pending.length;
+                  if (!context.mounted) {
+                    return;
+                  }
                   if (await confirm(
                     context,
                     title: 'Chiqasizmi?',
-                    text: "Telefondagi sessiya yopiladi. Baholar serverda saqlangan.",
+                    text: unsent == 0
+                        ? "Telefondagi sessiya yopiladi. Baholar serverda saqlangan."
+                        : "Telefonda $unsent ta yuborilmagan baho bor (internet yo'q). Chiqsangiz ular o'chib ketadi.",
                     action: 'Chiqish',
                     danger: true,
                   )) {
                     await ref.read(boardProvider.notifier).release().catchError((_) {});
+                    await outbox.clear();
                     await ref.read(authProvider.notifier).logout();
                   }
                 },

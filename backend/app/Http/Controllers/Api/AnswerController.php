@@ -2,21 +2,29 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\LessonFlowException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GradeAnswerRequest;
 use App\Http\Requests\SkipAnswerRequest;
 use App\Http\Requests\UpdateAnswerRequest;
 use App\Http\Resources\AnswerResource;
 use App\Models\Answer;
+use App\Models\SyncOperation;
 use App\Services\LessonRunner;
+use App\Services\OfflineSync;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
 class AnswerController extends Controller
 {
-    public function __construct(private LessonRunner $runner) {}
+    public function __construct(private LessonRunner $runner, private OfflineSync $sync) {}
 
     public function grade(GradeAnswerRequest $request, Answer $answer): AnswerResource
     {
+        if ($request->filled('client_uuid')) {
+            return AnswerResource::make($this->once($request, $answer, 'grade')->load(['student', 'question.options']));
+        }
+
         $answer = $this->runner->grade(
             $answer,
             $request->filled('score') ? $request->integer('score') : null,
@@ -39,6 +47,10 @@ class AnswerController extends Controller
 
     public function skip(SkipAnswerRequest $request, Answer $answer): AnswerResource
     {
+        if ($request->filled('client_uuid')) {
+            return AnswerResource::make($this->once($request, $answer, 'skip')->load(['student', 'question.options']));
+        }
+
         $answer = $request->input('reason') === 'absent'
             ? $this->runner->markAbsent($answer)
             : $this->runner->markNoAnswer($answer, $request->input('comment'));
@@ -51,5 +63,21 @@ class AnswerController extends Controller
         Gate::authorize('manage', $answer->lesson);
 
         return AnswerResource::make($this->runner->redraw($answer)->load(['student', 'question.options']));
+    }
+
+    /**
+     * Grade or skip through OfflineSync, so a request sent twice with the
+     * same client_uuid is applied once and answered the same way.
+     */
+    private function once(FormRequest $request, Answer $answer, string $type): Answer
+    {
+        $operation = $this->sync->find($request->user(), $request->input('client_uuid'))
+            ?? $this->sync->apply($request->user(), ['type' => $type] + $request->validated(), $answer);
+
+        if ($operation->status === SyncOperation::FAILED) {
+            throw new LessonFlowException((string) $operation->message, (string) $operation->error_code);
+        }
+
+        return $answer->refresh();
     }
 }

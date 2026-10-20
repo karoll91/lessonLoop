@@ -26,6 +26,8 @@ class GradeAnswerRequest extends FormRequest
             'score' => ['nullable', 'required_without:chosen_option', 'integer', 'min:0', 'max:100'],
             'chosen_option' => ['nullable', 'string', 'in:A,B,C,D'],
             'comment' => ['nullable', 'string', 'max:1000'],
+            // Makes a retried request safe: it is applied only once.
+            'client_uuid' => ['nullable', 'uuid'],
         ];
     }
 }

@@ -10,6 +10,7 @@ use App\Models\Answer;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -107,7 +108,7 @@ class LessonRunner
      *
      * @throws LessonFlowException
      */
-    public function grade(Answer $answer, ?int $score, ?string $comment = null, ?string $chosenOption = null): Answer
+    public function grade(Answer $answer, ?int $score, ?string $comment = null, ?string $chosenOption = null, ?CarbonInterface $gradedAt = null): Answer
     {
         $this->ensurePending($answer);
 
@@ -126,7 +127,7 @@ class LessonRunner
             'score' => $score,
             'chosen_option' => $chosenOption,
             'comment' => $comment,
-            'graded_at' => now(),
+            'graded_at' => $gradedAt ?? now(),
         ]);
 
         return $answer;
@@ -167,7 +168,7 @@ class LessonRunner
     /**
      * The student did not answer: scored 0 and stays in the queue (R8).
      */
-    public function markNoAnswer(Answer $answer, ?string $comment = null): Answer
+    public function markNoAnswer(Answer $answer, ?string $comment = null, ?CarbonInterface $gradedAt = null): Answer
     {
         $this->ensurePending($answer);
 
@@ -175,7 +176,7 @@ class LessonRunner
             'status' => AnswerStatus::NoAnswer,
             'score' => 0,
             'comment' => $comment,
-            'graded_at' => now(),
+            'graded_at' => $gradedAt ?? now(),
         ]);
 
         return $answer;
