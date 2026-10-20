@@ -5,7 +5,9 @@ import { ErrorState } from '../ui/components'
 import { LockIcon, LogoutIcon, LoopIcon, MoonIcon, SunIcon } from '../ui/icons'
 import { useTheme, type Theme } from './theme'
 
-const BOARD_URL = (import.meta.env.VITE_BOARD_URL as string | undefined) ?? `http://${window.location.hostname}:5173`
+const BOARD_URL =
+  (import.meta.env.VITE_BOARD_URL as string | undefined) ||
+  (import.meta.env.DEV ? `http://${window.location.hostname}:5173` : `${window.location.origin}/board/`)
 
 const links: { to: string; label: string; adminOnly?: boolean }[] = [
   { to: '/', label: 'Bosh sahifa' },

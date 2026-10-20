@@ -1,0 +1,79 @@
+# LessonLoop classroom server. Rendered by deploy/start.ps1 into
+# deploy/runtime/conf/nginx.conf — edit this template, not the copy.
+#   :{{HTTP_PORT}}/api/…   Laravel API (PHP 8.3 FastCGI workers)
+#   :{{HTTP_PORT}}/admin/  admin panel (admin/dist)
+#   :{{HTTP_PORT}}/board/  classroom board (board/dist)
+
+worker_processes  1;
+error_log  logs/error.log warn;
+pid        logs/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       "{{DEPLOY}}/nginx/mime.types";
+    default_type  application/octet-stream;
+    charset       utf-8;
+    sendfile      on;
+    keepalive_timeout  65;
+    client_max_body_size  20m;
+    server_tokens off;
+    access_log    off;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    upstream php {
+{{PHP_UPSTREAMS}}
+    }
+
+    server {
+        listen       {{HTTP_PORT}};
+        server_name  _;
+        root         "{{ROOT}}/backend/public";
+        index        index.php;
+
+        location = / {
+            return 302 /admin/;
+        }
+
+        # Built files under assets/ have hashed names and never change.
+        location /admin/ {
+            alias "{{ROOT}}/admin/dist/";
+            try_files $uri /admin/index.html;
+
+            location /admin/assets/ {
+                expires 30d;
+            }
+        }
+
+        location /board/ {
+            alias "{{ROOT}}/board/dist/";
+            try_files $uri /board/index.html;
+
+            location /board/assets/ {
+                expires 30d;
+            }
+        }
+
+        location / {
+            try_files $uri /index.php?$query_string;
+        }
+
+        location ~ \.php$ {
+            try_files $uri =404;
+            fastcgi_pass   php;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+            include        "{{DEPLOY}}/nginx/fastcgi_params";
+            fastcgi_read_timeout 300;
+            fastcgi_next_upstream error timeout;
+        }
+
+        location ~ /\.(?!well-known) {
+            deny all;
+        }
+    }
+}

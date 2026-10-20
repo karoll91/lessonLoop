@@ -105,7 +105,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 **Ochiq masalalar:**
 - ~~D9 dizaynidagi «Pult uzildi» (telefon aloqasi yo'qolgani) hali yo'q~~ — Faza 5b'da qilindi.
 - Birinchi sinovda doska bir marta WebSocket xabarini olmadi (keyingi barcha urinishlarda keldi, sababi topilmadi); 30 soniyalik zaxira so'rov buni yopadi, lekin kuzatib borish kerak.
-- ~~Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak~~ — `BoardSession` `Prunable`: 24 soat (`LESSONLOOP_BOARD_PRUNE_HOURS`) ko'rinmagan sessiyalar har kuni `model:prune` bilan o'chadi (`schedule:run` ishga tushirilgan bo'lishi kerak, Faza 6).
+- ~~Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak~~ — `BoardSession` `Prunable`: 24 soat (`LESSONLOOP_BOARD_PRUNE_HOURS`) ko'rinmagan sessiyalar har kuni `model:prune` bilan o'chadi (`deploy/start.ps1` rejalashtiruvchini `schedule:work` bilan ishga tushiradi).
 
 ### Faza 4 — Web admin panel ✅
 - `admin/` — React + Vite, react-router, TanStack Query. Sahifalar: W1 kirish (+ vaqtinchalik parolni almashtirish), W2 bosh sahifa, W3 guruhlar va guruh kurslari (fan + o'qituvchi biriktirish), W4 fanlar va mavzular (tartibni o'zgartirish), W5 talabalar (kurs bo'yicha navbat holati, import: oldin tekshirish, keyin saqlash, shablon), W6 savollar banki va muharrir (A–D variantlar, import), W7 darslar tarixi va dars tafsiloti (bahoni sabab bilan tuzatish, tuzatish tarixi), W8 jurnal (xlsx/csv eksport), W9 hisobotlar, W10 foydalanuvchilar (faqat admin; vaqtinchalik parol bir marta ko'rsatiladi, bloklash), W11 sozlamalar (random qoidalari, mavzu, parol), W12 404, kutilmagan xato, internet uzilishi va server ishlamay qolishi holatlari.
@@ -116,7 +116,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 **Jami: 71 ta API route (broadcasting auth bilan), 126 ta backend testi (423 tekshiruv), 14 ta doska va 6 ta admin testi — hammasi o'tadi.**
 
 **Ochiq masalalar:**
-- `artisan serve` bir oqimli, admin sahifalari 1–3 soniyada ochiladi. Ishga tushirishda (Faza 6) Apache/Nginx + PHP-FPM orqali ishlatish kerak.
+- ~~`artisan serve` bir oqimli~~ — Faza 6'da nginx + PHP 8.3 FastCGI (`deploy/`).
 - Kichik ekranda (< 860px) keng jadvallar gorizontal suriladi; telefon uchun alohida ko'rinish yo'q (o'qituvchi telefonda Flutter ilovasidan foydalanadi).
 
 ### Faza 5 — Flutter mobil ilova (o'qituvchi + pult) ✅
@@ -161,8 +161,17 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
   - Ochiq: admin panel va doska faqat o'zbek lotinida; backend validatsiya xabarlari inglizcha (o'zbekcha `lang/uz` qo'shish mumkin).
 
 ### Faza 6 — Ishga tushirish
-- [ ] OpenServer domenlari: `api.lessonloop.loc`, `board.lessonloop.loc`, `admin.lessonloop.loc`.
-- [ ] Kunlik MySQL zaxira nusxasi, `.env` production sozlamalari.
+- [x] ~~OpenServer domenlari~~ → alohida server (`deploy/`). Laravel 13 PHP 8.3 talab qiladi, OpenServer 5 Apache'si esa butun panel uchun bitta PHP (≤ 8.1) — domenlar boshqa saytlarni (linuxquiz.uz) buzardi. Shuning uchun OpenServer'dagi `nginx.exe` + `D:/php83/php-cgi.exe` bilan alohida stek; MySQL — OpenServer'niki.
+  - `deploy\build.bat` — admin va doskani `--mode classroom` bilan yig'adi (`/admin/`, `/board/`, API — sahifa ochilgan serverning o'zi, shuning uchun bitta build har qanday IP'da ishlaydi; Reverb kaliti `backend/.env`'dan).
+  - `deploy\start.bat` — tekshiradi (PHP, nginx, dist, MySQL 3306, port band emasligi), `migrate --force`, route/event/view keshlari, nginx konfiguratsiyasi (`deploy/nginx/nginx.conf.template` → `deploy/runtime/`), 4 ta php-cgi (opcache), Reverb (:8080), `schedule:work`, nginx (:8000). Kuzatuvchi: to'xtagan jarayon 5 soniyada qayta ishga tushadi, nginx port orqali tekshiriladi. Kompyuter IP'si va manzillarni chiqaradi. `deploy\stop.bat` — hammasini (kuzatuvchini ham) to'xtatadi.
+  - `deploy\config.ps1` — yo'llar, port, ishchilar soni. `deploy\firewall.ps1` (admin huquqi bilan, 8000/8080) va `deploy\autostart.ps1` (Windows'ga kirilganda avtomatik) — foydalanuvchi o'zi ishga tushiradi.
+  - Config keshlanmaydi: keshlangan config bilan `php artisan test` phpunit.xml'ni e'tiborsiz qoldirib haqiqiy MySQL bazani tozalab yuborishi mumkin edi.
+  - Tekshirildi: :8090 da sinov — admin, doska, API, Reverb orqali doskaga real vaqt (localhost'da), php-cgi va nginx o'ldirilganda o'zi tiklandi, stop.bat hammasini to'xtatdi. LAN IP orqali WebSocket'ni ilova ichidagi brauzer bloklaydi (curl bilan 101 Switching Protocols) — haqiqiy doska kompyuterida sinash kerak.
+- [x] Kunlik MySQL zaxira nusxasi, `.env` production sozlamalari.
+  - `php artisan lessonloop:backup` — mysqldump (parol `MYSQL_PWD` orqali, buyruq qatorida emas) → zip, `storage/app/backups` (`LESSONLOOP_BACKUP_DIR`), 30 kundan eskilari o'chadi. Rejalashtiruvchi har soat `--if-missing` bilan chaqiradi — kompyuter kechasi o'chiq bo'lsa ham kuniga bitta nusxa bo'ladi. Fayl nomi Toshkent vaqtida.
+  - OpenServer'dagi `mysqldump.exe` faylni yozib bo'lishidan oldin qaytadi — buyruq fayl hajmi barqaror bo'lguncha kutadi.
+  - `deploy/env.production.example` — `backend/.env`'da o'zgartiriladigan qiymatlar (APP_ENV=production, APP_DEBUG=false, APP_URL, LOG_LEVEL, MySQL paroli).
+  - Testlar: +3 backend (142 ta, 491 tekshiruv).
 - [ ] API hujjati (OpenAPI yoki Scribe).
 
 ## PRD'dagi javobsiz savollar

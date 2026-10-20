@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 
 // Closed board tabs (BoardSession::prunable).
 Schedule::command('model:prune', ['--model' => [BoardSession::class]])->daily();
+
+// Daily database backup; hourly attempts so a PC that was off at night still gets one.
+Schedule::command('lessonloop:backup', ['--if-missing'])->hourly()->withoutOverlapping();

@@ -54,4 +54,21 @@ return [
 
     'board_prune_hours' => (int) env('LESSONLOOP_BOARD_PRUNE_HOURS', 24),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database backup (php artisan lessonloop:backup)
+    |--------------------------------------------------------------------------
+    |
+    | Once a day while the server runs; zip files older than keep_days are
+    | deleted. mysqldump defaults to the one shipped with OpenServer.
+    |
+    */
+
+    'backup' => [
+        'directory' => env('LESSONLOOP_BACKUP_DIR', storage_path('app/backups')),
+        'mysqldump' => env('LESSONLOOP_MYSQLDUMP', 'D:\OSPanel\modules\database\MySQL-8.0-Win10\bin\mysqldump.exe'),
+        'keep_days' => (int) env('LESSONLOOP_BACKUP_DAYS', 30),
+        'timezone' => env('LESSONLOOP_LOCAL_TIMEZONE', 'Asia/Tashkent'),
+    ],
+
 ];

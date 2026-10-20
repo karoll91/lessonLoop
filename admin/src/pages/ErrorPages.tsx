@@ -47,7 +47,7 @@ export function RouteError() {
           <button type="button" className="btn primary" onClick={() => window.location.reload()}>
             Qayta yuklash
           </button>
-          <a className="btn" href="/">
+          <a className="btn" href={import.meta.env.BASE_URL}>
             Bosh sahifa
           </a>
         </div>

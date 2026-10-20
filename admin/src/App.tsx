@@ -31,6 +31,7 @@ const queryClient = new QueryClient({
   },
 })
 
+// basename: /admin when built for the classroom server, empty in dev.
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteError /> },
   { path: '/change-password', element: <ChangePasswordPage />, errorElement: <RouteError /> },
@@ -61,7 +62,7 @@ const router = createBrowserRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
-])
+], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })
 
 export default function App() {
   return (

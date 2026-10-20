@@ -1,4 +1,7 @@
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? `http://${window.location.hostname}:8000/api`
+/** Dev server: API on :8000. Built panel (served by the API's nginx at /admin/): same origin. */
+const API_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.DEV ? `http://${window.location.hostname}:8000/api` : `${window.location.origin}/api`)
 
 const TOKEN_KEY = 'lessonloop.admin.token'
 
