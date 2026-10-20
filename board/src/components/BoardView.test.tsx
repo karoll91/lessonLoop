@@ -5,8 +5,8 @@ import { boardState, openQuestion, testQuestion } from '../test/fixtures'
 import type { BoardState, ConnectionStatus } from '../types'
 import { BoardView } from './BoardView'
 
-function show(state: BoardState, connection: ConnectionStatus = 'connected') {
-  return render(<BoardView state={state} connection={connection} theme="light" onToggleTheme={() => {}} />)
+function show(state: BoardState, connection: ConnectionStatus = 'connected', controllerOnline = true) {
+  return render(<BoardView state={state} connection={connection} controllerOnline={controllerOnline} theme="light" onToggleTheme={() => {}} />)
 }
 
 afterEach(() => {
@@ -14,6 +14,27 @@ afterEach(() => {
 })
 
 describe('BoardView', () => {
+  it('keeps the last screen and shows «Pult uzildi» when the phone stops sending heartbeats', () => {
+    show(boardState({ screen: 'question', current: { student: { full_name: 'Akmal Karimov' }, question: openQuestion } }), 'connected', false)
+
+    expect(screen.getByTestId('remote-lost')).toHaveTextContent('Pult uzildi')
+    expect(screen.getByTestId('question-text')).toHaveTextContent(openQuestion.text)
+    expect(screen.queryByText('Pult ulangan')).not.toBeInTheDocument()
+  })
+
+  it('does not show «Pult uzildi» while the phone is online or the board waits for pairing', () => {
+    show(boardState({ screen: 'lobby' }))
+    expect(screen.queryByTestId('remote-lost')).not.toBeInTheDocument()
+    expect(screen.getByText('Pult ulangan')).toBeInTheDocument()
+  })
+
+  it('shows only the server warning when the board itself is offline', () => {
+    show(boardState({ screen: 'lobby' }), 'reconnecting', false)
+
+    expect(screen.getByText("Server bilan aloqa yo'q")).toBeInTheDocument()
+    expect(screen.queryByTestId('remote-lost')).not.toBeInTheDocument()
+  })
+
   it('shows the six-digit pairing code while waiting for the phone', () => {
     show(boardState({ screen: 'pairing', is_paired: false, lesson: undefined, pair_code: '482913', pair_code_expires_at: new Date(Date.now() + 120_000).toISOString() }))
 

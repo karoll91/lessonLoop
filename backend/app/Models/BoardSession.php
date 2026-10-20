@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['token', 'name', 'pair_code', 'pair_code_expires_at', 'controller_id', 'lesson_id', 'answer_id', 'screen', 'options', 'last_seen_at'])]
+#[Fillable(['token', 'name', 'pair_code', 'pair_code_expires_at', 'controller_id', 'lesson_id', 'answer_id', 'screen', 'options', 'last_seen_at', 'controller_seen_at'])]
 #[Hidden(['token'])]
 class BoardSession extends Model
 {
@@ -41,6 +41,7 @@ class BoardSession extends Model
             'options' => 'array',
             'pair_code_expires_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'controller_seen_at' => 'datetime',
         ];
     }
 
@@ -71,6 +72,16 @@ class BoardSession extends Model
     public function option(string $key): mixed
     {
         return ($this->options ?? [])[$key] ?? self::DEFAULT_OPTIONS[$key] ?? null;
+    }
+
+    /**
+     * The paired phone sent a heartbeat recently enough.
+     */
+    public function controllerOnline(): bool
+    {
+        return $this->controller_id !== null
+            && $this->controller_seen_at !== null
+            && $this->controller_seen_at->gt(now()->subSeconds((int) config('lessonloop.controller_timeout')));
     }
 
     public function broadcastChannelName(): string

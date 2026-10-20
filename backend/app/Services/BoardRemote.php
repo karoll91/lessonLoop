@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\BoardCommand;
 use App\Enums\BoardScreen;
+use App\Events\BoardControllerSeen;
 use App\Events\BoardControlLost;
 use App\Events\BoardUpdated;
 use App\Exceptions\LessonFlowException;
@@ -73,7 +74,7 @@ class BoardRemote
             'pair_code' => null,
             'pair_code_expires_at' => null,
             'screen' => BoardScreen::Lobby,
-            'last_seen_at' => now(),
+            'controller_seen_at' => now(),
         ]);
 
         if ($previousControllerId !== null && $previousControllerId !== $teacher->id) {
@@ -174,6 +175,7 @@ class BoardRemote
     {
         $board->fill([
             'controller_id' => null,
+            'controller_seen_at' => null,
             'lesson_id' => null,
             'answer_id' => null,
             'screen' => BoardScreen::Pairing,
@@ -182,6 +184,25 @@ class BoardRemote
         $board->save();
 
         $this->broadcast($board);
+
+        return $board;
+    }
+
+    /**
+     * The paired phone is still there. A board that showed «Pult uzildi» gets
+     * its full state back; otherwise a small heartbeat event is enough.
+     */
+    public function heartbeat(BoardSession $board): BoardSession
+    {
+        $wasOnline = $board->controllerOnline();
+
+        $board->forceFill(['controller_seen_at' => now()])->save();
+
+        if ($wasOnline) {
+            BoardControllerSeen::dispatch($board);
+        } else {
+            $this->broadcast($board);
+        }
 
         return $board;
     }

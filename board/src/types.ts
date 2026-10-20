@@ -69,6 +69,10 @@ export interface BoardState {
   name: string | null
   screen: BoardScreen
   is_paired: boolean
+  /** The paired phone sent a heartbeat within controller_timeout seconds. */
+  controller_online?: boolean
+  controller_seen_seconds_ago?: number | null
+  controller_timeout?: number
   options: BoardOptions
   pair_code?: string | null
   pair_code_expires_at?: string | null

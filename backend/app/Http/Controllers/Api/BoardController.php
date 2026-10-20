@@ -87,6 +87,28 @@ class BoardController extends Controller
         return response()->json(['state' => $this->remote->state($board)]);
     }
 
+    /**
+     * The controlling phone restores its board after an app restart.
+     */
+    public function controllerState(BoardSession $board): JsonResponse
+    {
+        Gate::authorize('control', $board);
+
+        return response()->json(['state' => $this->remote->state($board)]);
+    }
+
+    /**
+     * Sent by the controlling phone every ~15 seconds while it is paired.
+     */
+    public function heartbeat(BoardSession $board): JsonResponse
+    {
+        Gate::authorize('control', $board);
+
+        $board = $this->remote->heartbeat($board);
+
+        return response()->json(['state' => $this->remote->state($board)]);
+    }
+
     public function takeover(BoardSession $board): JsonResponse
     {
         Gate::authorize('control', $board);

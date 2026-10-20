@@ -103,7 +103,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 - 14 ta Vitest testi; backend + Reverb bilan brauzerda end-to-end tekshirilgan (D1–D10, light va dark).
 
 **Ochiq masalalar:**
-- D9 dizaynidagi «Pult uzildi» (telefon aloqasi yo'qolgani) hali yo'q — buning uchun telefon backend'ga heartbeat yuborishi kerak; Faza 5 (Flutter) bilan birga qilinadi.
+- ~~D9 dizaynidagi «Pult uzildi» (telefon aloqasi yo'qolgani) hali yo'q~~ — Faza 5b'da qilindi.
 - Birinchi sinovda doska bir marta WebSocket xabarini olmadi (keyingi barcha urinishlarda keldi, sababi topilmadi); 30 soniyalik zaxira so'rov buni yopadi, lekin kuzatib borish kerak.
 - Yopilgan brauzer oynalaridan qolgan doska sessiyalarini tozalovchi rejalashtirilgan buyruq kerak.
 
@@ -126,8 +126,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 
 **Ochiq masalalar:**
 - Offline baholash va sinxron (`POST /sync`, `client_uuid`) — hali yo'q; internet uzilsa xato xabari chiqadi.
-- Telefon doska ulanishini xotirada saqlaydi: ilova qayta ochilsa doskaga qayta ulanish kerak (doska o'zi ulangan holatda qoladi).
-- Telefon heartbeat va doskadagi «Pult uzildi» ekrani yo'q.
+- ~~Telefon doska ulanishini xotirada saqlaydi~~ va ~~heartbeat / «Pult uzildi» yo'q~~ — Faza 5b'da qilindi.
 - Android APK yig'ilmagan (Android SDK yo'q); kamera bilan QR faqat haqiqiy telefonda tekshiriladi.
 - Til tanlash (kirill, rus) va Manrope shrifti qo'shilmagan — hozircha lotin o'zbek va tizim shrifti.
 
@@ -138,7 +137,13 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
 
 ### Faza 5b — Mobil ilovani yakunlash
 - [ ] Android SDK + APK, haqiqiy telefonda QR va Wi-Fi orqali sinov.
-- [ ] Doska ulanishini saqlash va qayta tiklash, telefon heartbeat + «Pult uzildi» (D9).
+- [x] Doska ulanishini saqlash va qayta tiklash, telefon heartbeat + «Pult uzildi» (D9).
+  - Telefon doska id'sini `SharedPreferences`'da saqlaydi va ilova qayta ochilganda `GET /boards/{board}/controller-state` (faqat ulangan telefon, `BoardSessionPolicy::control`) orqali qayta tiklaydi; 403/404 bo'lsa (boshqa telefon olib qo'ygan yoki doska yopilgan) unutadi, internet bo'lmasa 15 soniyadan keyin qayta urinadi.
+  - Ulangan telefon har 15 soniyada `POST /boards/{board}/heartbeat` yuboradi → `board_sessions.controller_seen_at` (yangi ustun; `last_seen_at` doskaning o'zi uchun qoldi). Heartbeat 403/404 qaytarsa telefon doskani unutadi.
+  - Doska holatida `controller_online`, `controller_seen_seconds_ago` (nisbiy — doska kompyuteri soati noto'g'ri bo'lsa ham ishlaydi) va `controller_timeout` (45 s, `LESSONLOOP_CONTROLLER_TIMEOUT`). Har bir heartbeat doskaga kichik `board.controller-seen` hodisasini yuboradi; pult uzilgan bo'lsa — to'liq `board.updated`.
+  - Doska 45 soniya heartbeat kelmasa oxirgi ekran ustida «Pult uzildi» kartasini va yuqorida «Pult uzildi» belgisini ko'rsatadi; server bilan aloqa yo'q bo'lsa faqat server ogohlantirishi chiqadi.
+  - Testlar: +6 backend (132 ta, 446 tekshiruv), +7 doska Vitest (21 ta), +5 Flutter (17 ta); `flutter analyze` toza. 73 ta API route.
+  - Ochiq: haqiqiy telefonda ilova fonga o'tganda heartbeat to'xtaydi — doska «Pult uzildi» ko'rsatadi, telefon qaytganda o'zi tiklanadi (kutilgan xatti-harakat, lekin sinab ko'rish kerak). Brauzerda end-to-end tekshirilmagan, faqat testlar bilan. Ishlayotgan bazada `php artisan migrate` kerak.
 - [ ] Offline baholash va sinxron (`POST /sync`, idempotent `client_uuid`) — PRD'dagi 2-bosqich.
 - [ ] Kirill va rus tillari, Manrope shrifti.
 

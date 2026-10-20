@@ -40,4 +40,11 @@ return [
 
     'pair_code_ttl' => (int) env('LESSONLOOP_PAIR_CODE_TTL', 300),
 
+    /*
+    | The phone sends a heartbeat every ~15 s while paired. After this many
+    | seconds without one the board shows «Pult uzildi» (D9).
+    */
+
+    'controller_timeout' => (int) env('LESSONLOOP_CONTROLLER_TIMEOUT', 45),
+
 ];

@@ -36,6 +36,12 @@ class BoardPresenter
             'name' => $board->name,
             'screen' => $board->screen->value,
             'is_paired' => $board->controller_id !== null,
+            'controller_online' => $board->controllerOnline(),
+            // Relative, so the board's own clock does not matter.
+            'controller_seen_seconds_ago' => $board->controller_id !== null && $board->controller_seen_at !== null
+                ? max(0, (int) $board->controller_seen_at->diffInSeconds(now()))
+                : null,
+            'controller_timeout' => (int) config('lessonloop.controller_timeout'),
             'options' => array_merge(BoardSession::DEFAULT_OPTIONS, $board->options ?? []),
         ];
 

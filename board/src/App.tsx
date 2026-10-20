@@ -4,7 +4,7 @@ import { toggleFullscreen, useTheme } from './hooks'
 import { useBoard } from './useBoard'
 
 export default function App() {
-  const { state, error, connection, retry } = useBoard()
+  const { state, error, connection, controllerOnline, retry } = useBoard()
   const [theme, toggleTheme] = useTheme()
 
   useEffect(() => {
@@ -46,5 +46,5 @@ export default function App() {
     )
   }
 
-  return <BoardView state={state} connection={connection} theme={theme} onToggleTheme={toggleTheme} />
+  return <BoardView state={state} connection={connection} controllerOnline={controllerOnline} theme={theme} onToggleTheme={toggleTheme} />
 }

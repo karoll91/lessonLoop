@@ -6,6 +6,7 @@ import { ExpandIcon, LoopIcon, MoonIcon, SunIcon } from './icons'
 interface ShellProps {
   state: BoardState
   connection: ConnectionStatus
+  remoteLost?: boolean
   theme: Theme
   onToggleTheme: () => void
   onFullscreen: () => void
@@ -14,7 +15,7 @@ interface ShellProps {
 }
 
 /** Top bar (lesson, progress, link status), content and footer of every screen. */
-export function Shell({ state, connection, theme, onToggleTheme, onFullscreen, footer, children }: ShellProps) {
+export function Shell({ state, connection, remoteLost = false, theme, onToggleTheme, onFullscreen, footer, children }: ShellProps) {
   const lesson = state.lesson
 
   return (
@@ -38,7 +39,7 @@ export function Shell({ state, connection, theme, onToggleTheme, onFullscreen, f
             <span className="grow" />
           </>
         )}
-        <LinkStatus state={state} connection={connection} />
+        <LinkStatus state={state} connection={connection} remoteLost={remoteLost} />
       </header>
 
       {children}
@@ -91,13 +92,17 @@ export function Progress({ state }: { state: BoardState }) {
   )
 }
 
-function LinkStatus({ state, connection }: { state: BoardState; connection: ConnectionStatus }) {
+function LinkStatus({ state, connection, remoteLost }: { state: BoardState; connection: ConnectionStatus; remoteLost: boolean }) {
   if (connection !== 'connected') {
     return <span className="live off">Aloqa yo'q</span>
   }
 
   if (!state.is_paired) {
     return <span className="live wait">Pult kutilmoqda</span>
+  }
+
+  if (remoteLost) {
+    return <span className="live off">Pult uzildi</span>
   }
 
   return <span className="live">Pult ulangan</span>

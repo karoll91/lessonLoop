@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, fetchState, openBoard, refreshPairCode } from './api'
 import { config } from './config'
+import { controllerSeenAt, useControllerOnline } from './controller'
 import { createEcho, type BoardEcho } from './echo'
 import type { BoardState, ConnectionStatus } from './types'
 
@@ -27,22 +28,30 @@ export interface UseBoard {
   state: BoardState | null
   error: string | null
   connection: ConnectionStatus
+  /** False while the paired phone is silent (D9 «Pult uzildi»). */
+  controllerOnline: boolean
   retry: () => void
 }
 
 /**
  * Keeps the board in sync with the backend: restores or opens a board
  * session, listens on board.{token}, re-reads the state after reconnects and
- * renews an expired pairing code.
+ * renews an expired pairing code. Also tracks the phone's heartbeats.
  */
 export function useBoard(): UseBoard {
-  const [state, setState] = useState<BoardState | null>(null)
+  const [state, setBoardState] = useState<BoardState | null>(null)
+  const [seenAt, setSeenAt] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [connection, setConnection] = useState<ConnectionStatus>('connecting')
   const [attempt, setAttempt] = useState(0)
   const tokenRef = useRef<string | null>(null)
 
   const retry = useCallback(() => setAttempt((value) => value + 1), [])
+
+  const setState = useCallback((fresh: BoardState) => {
+    setBoardState(fresh)
+    setSeenAt(controllerSeenAt(fresh, Date.now()))
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -99,7 +108,10 @@ export function useBoard(): UseBoard {
         setError(null)
 
         echo = createEcho()
-        echo.channel(`board.${token}`).listen('.board.updated', (fresh: BoardState) => setState(fresh))
+        echo
+          .channel(`board.${token}`)
+          .listen('.board.updated', (fresh: BoardState) => setState(fresh))
+          .listen('.board.controller-seen', () => setSeenAt(Date.now()))
 
         let wasConnected = false
         stopConnectionWatch = echo.connector.onConnectionChange((status) => {
@@ -131,7 +143,7 @@ export function useBoard(): UseBoard {
       window.clearInterval(poll)
       window.clearTimeout(retryTimer)
     }
-  }, [attempt])
+  }, [attempt, setState])
 
   const expiresAt = state?.screen === 'pairing' ? state.pair_code_expires_at : null
 
@@ -154,7 +166,9 @@ export function useBoard(): UseBoard {
     }, delay)
 
     return () => window.clearTimeout(timer)
-  }, [expiresAt])
+  }, [expiresAt, setState])
 
-  return { state, error, connection, retry }
+  const controllerOnline = useControllerOnline(state?.is_paired ?? false, seenAt, state?.controller_timeout)
+
+  return { state, error, connection, controllerOnline, retry }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers\Api;
 
 use App\Enums\BoardScreen;
+use App\Events\BoardControllerSeen;
 use App\Events\BoardControlLost;
 use App\Events\BoardUpdated;
 use App\Models\BoardSession;
@@ -145,6 +146,95 @@ class BoardControllerTest extends TestCase
             ->assertJsonPath('state.summary.average', 65)
             ->assertJsonPath('state.summary.passed_count', 1)
             ->assertJsonPath('state.summary.retry_count', 1);
+    }
+
+    public function test_controller_restores_its_board_after_an_app_restart(): void
+    {
+        [, $board] = $this->pairedBoardWithLesson();
+
+        $this->getJson(route('boards.controller-state', $board))
+            ->assertOk()
+            ->assertJsonPath('state.board_id', $board->id)
+            ->assertJsonPath('state.screen', BoardScreen::Lobby->value)
+            ->assertJsonPath('state.lesson.id', $board->fresh()->lesson_id);
+    }
+
+    public function test_controller_state_returns_403_for_a_phone_that_does_not_control_the_board(): void
+    {
+        $board = BoardSession::factory()->create(['controller_id' => User::factory()->create()->id]);
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->getJson(route('boards.controller-state', $board))->assertForbidden();
+        $this->postJson(route('boards.heartbeat', $board))->assertForbidden();
+    }
+
+    public function test_pairing_counts_as_the_first_heartbeat(): void
+    {
+        $board = BoardSession::factory()->create();
+        Sanctum::actingAs(User::factory()->create());
+        Event::fake([BoardUpdated::class]);
+
+        $this->postJson(route('boards.pair'), ['code' => $board->pair_code])
+            ->assertOk()
+            ->assertJsonPath('state.controller_online', true)
+            ->assertJsonPath('state.controller_seen_seconds_ago', 0)
+            ->assertJsonPath('state.controller_timeout', 45);
+    }
+
+    public function test_board_shows_the_controller_offline_after_45_seconds_without_a_heartbeat(): void
+    {
+        $teacher = User::factory()->create();
+        $board = BoardSession::factory()->create([
+            'controller_id' => $teacher->id,
+            'screen' => BoardScreen::Lobby,
+            'pair_code' => null,
+            'controller_seen_at' => now()->subSeconds(46),
+        ]);
+
+        $this->getJson(route('boards.state', $board->token))
+            ->assertOk()
+            ->assertJsonPath('state.controller_online', false)
+            ->assertJsonPath('state.controller_seen_seconds_ago', 46);
+    }
+
+    public function test_heartbeat_marks_the_controller_online_and_wakes_an_offline_board_with_the_full_state(): void
+    {
+        $teacher = User::factory()->create();
+        $board = BoardSession::factory()->create([
+            'controller_id' => $teacher->id,
+            'screen' => BoardScreen::Lobby,
+            'pair_code' => null,
+            'controller_seen_at' => now()->subMinute(),
+        ]);
+        Sanctum::actingAs($teacher);
+        Event::fake([BoardUpdated::class, BoardControllerSeen::class]);
+
+        $this->postJson(route('boards.heartbeat', $board))
+            ->assertOk()
+            ->assertJsonPath('state.controller_online', true);
+
+        $this->assertTrue($board->fresh()->controller_seen_at->gt(now()->subSeconds(5)));
+        Event::assertDispatched(BoardUpdated::class, fn (BoardUpdated $event): bool => $event->state['controller_online'] === true);
+        Event::assertNotDispatched(BoardControllerSeen::class);
+    }
+
+    public function test_heartbeat_of_an_online_controller_sends_only_the_small_event(): void
+    {
+        $teacher = User::factory()->create();
+        $board = BoardSession::factory()->create([
+            'controller_id' => $teacher->id,
+            'screen' => BoardScreen::Lobby,
+            'pair_code' => null,
+            'controller_seen_at' => now()->subSeconds(15),
+        ]);
+        Sanctum::actingAs($teacher);
+        Event::fake([BoardUpdated::class, BoardControllerSeen::class]);
+
+        $this->postJson(route('boards.heartbeat', $board))->assertOk();
+
+        Event::assertNotDispatched(BoardUpdated::class);
+        Event::assertDispatched(BoardControllerSeen::class, fn (BoardControllerSeen $event): bool => $event->broadcastOn()[0]->name === 'board.'.$board->token
+            && $event->broadcastAs() === 'board.controller-seen');
     }
 
     public function test_release_puts_the_board_back_on_the_pairing_screen_with_a_new_code(): void
