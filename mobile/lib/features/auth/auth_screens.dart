@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
@@ -40,7 +41,7 @@ class SplashScreen extends StatelessWidget {
             const SizedBox(height: 18),
             const Text('LessonLoop', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
             const SizedBox(height: 6),
-            Text('Har dars — takrorlash', style: TextStyle(color: c.ink2)),
+            Text(tr('Har dars — takrorlash'), style: TextStyle(color: c.ink2)),
             const SizedBox(height: 40),
             const CircularProgressIndicator(),
           ],
@@ -62,12 +63,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pages = PageController();
   int _page = 0;
 
-  static const _slides = [
-    (Icons.casino_outlined, 'Adolatli random', "Har talaba 4 darsda bir marta so'raladi. 60 baldan past olganlar keyingi darsda yana navbatga tushadi."),
+  static List<(IconData, String, String)> get _slides => [
+    (Icons.casino_outlined, tr('Adolatli random'), tr("Har talaba 4 darsda bir marta so'raladi. 60 baldan past olganlar keyingi darsda yana navbatga tushadi.")),
     (
       Icons.fact_check_outlined,
-      "To'g'ri javob doim qo'lingizda",
-      "Talaba javob bergach, namuna javobni oching va 0–100 ball qo'ying. Baholar avtomatik saqlanadi.",
+      tr("To'g'ri javob doim qo'lingizda"),
+      tr("Talaba javob bergach, namuna javobni oching va 0–100 ball qo'ying. Baholar avtomatik saqlanadi."),
     ),
   ];
 
@@ -96,7 +97,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(onPressed: () => ref.read(settingsProvider.notifier).finishOnboarding(), child: const Text("O'tkazib yuborish")),
+              child: TextButton(onPressed: () => ref.read(settingsProvider.notifier).finishOnboarding(), child: Text(tr("O'tkazib yuborish"))),
             ),
             Expanded(
               child: PageView(
@@ -140,7 +141,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       decoration: BoxDecoration(color: index == _page ? c.accent : c.line, borderRadius: BorderRadius.circular(4)),
                     ),
                   const Spacer(),
-                  FilledButton(onPressed: _next, child: Text(last ? 'Boshlash' : 'Keyingi')),
+                  FilledButton(onPressed: _next, child: Text(last ? tr('Boshlash') : tr('Keyingi'))),
                 ],
               ),
             ),
@@ -163,13 +164,31 @@ class _ThemeChoice extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Ko'rinish", style: Theme.of(context).textTheme.headlineSmall),
+          Text(tr("Til va ko'rinish"), style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
-          Text("Keyin Sozlamalarda o'zgartirish mumkin", style: TextStyle(color: context.colors.ink2)),
+          Text(tr("Keyin Sozlamalarda o'zgartirish mumkin"), style: TextStyle(color: context.colors.ink2)),
           const SizedBox(height: 20),
+          const LanguageSelector(),
+          const SizedBox(height: 12),
           ThemeModeSelector(mode: mode, onChanged: (value) => ref.read(settingsProvider.notifier).setThemeMode(value)),
         ],
       ),
+    );
+  }
+}
+
+/// O'zbekcha (lotin) · Ўзбекча (кирилл) · Русский.
+class LanguageSelector extends ConsumerWidget {
+  const LanguageSelector({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(languageProvider);
+    return SegmentedButton<AppLanguage>(
+      segments: [for (final value in AppLanguage.values) ButtonSegment(value: value, label: Text(value.label))],
+      selected: {language},
+      showSelectedIcon: false,
+      onSelectionChanged: (selection) => ref.read(languageProvider.notifier).set(selection.first),
     );
   }
 }
@@ -183,10 +202,11 @@ class ThemeModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SegmentedButton<ThemeMode>(
-      segments: const [
-        ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode_outlined), label: Text("Yorug'")),
-        ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode_outlined), label: Text("Qorong'i")),
-        ButtonSegment(value: ThemeMode.system, label: Text('Tizim')),
+      segments: [
+        // No icons: the labels need the width in Cyrillic and Russian.
+        ButtonSegment(value: ThemeMode.light, label: Text(tr("Yorug'"))),
+        ButtonSegment(value: ThemeMode.dark, label: Text(tr("Qorong'i"))),
+        ButtonSegment(value: ThemeMode.system, label: Text(tr('Tizim'))),
       ],
       selected: {mode},
       showSelectedIcon: false,
@@ -258,9 +278,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             const Align(alignment: Alignment.centerLeft, child: LogoMark()),
             const SizedBox(height: 28),
-            Text('Xush kelibsiz', style: Theme.of(context).textTheme.headlineSmall),
+            Text(tr('Xush kelibsiz'), style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 6),
-            Text('Admin bergan login va parol bilan kiring', style: TextStyle(color: c.ink2)),
+            Text(tr('Admin bergan login va parol bilan kiring'), style: TextStyle(color: c.ink2)),
             const SizedBox(height: 24),
             if (_error != null && (_error!.isOffline || (loginError == null && passwordError == null))) ...[
               Banner2(_error!.userMessage, tone: Tone.danger, icon: _error!.isOffline ? Icons.wifi_off : null),
@@ -273,7 +293,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               autocorrect: false,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.username],
-              decoration: const InputDecoration(labelText: 'Login', hintText: 'masalan, sh.mahkamov'),
+              decoration: InputDecoration(labelText: tr('Login'), hintText: tr('masalan, sh.mahkamov')),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -283,17 +303,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               autofillHints: const [AutofillHints.password],
               onSubmitted: (_) => ready ? _submit() : null,
               decoration: InputDecoration(
-                labelText: 'Parol',
+                labelText: tr('Parol'),
                 errorText: passwordError,
                 suffixIcon: IconButton(
-                  tooltip: _hidden ? "Parolni ko'rsatish" : 'Parolni yashirish',
+                  tooltip: _hidden ? tr("Parolni ko'rsatish") : tr('Parolni yashirish'),
                   icon: Icon(_hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                   onPressed: () => setState(() => _hidden = !_hidden),
                 ),
               ),
             ),
             const SizedBox(height: 8),
-            Text("Parolni unutgan bo'lsangiz, admin yangi vaqtinchalik parol beradi.", style: Theme.of(context).textTheme.bodySmall),
+            Text(tr("Parolni unutgan bo'lsangiz, admin yangi vaqtinchalik parol beradi."), style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: ready ? _submit : null,
@@ -303,17 +323,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: c.onAccent)),
                         const SizedBox(width: 10),
-                        const Text('Tekshirilmoqda…'),
+                        Text(tr('Tekshirilmoqda…')),
                       ],
                     )
-                  : const Text('Kirish'),
+                  : Text(tr('Kirish')),
             ),
             const SizedBox(height: 12),
             Center(
               child: TextButton.icon(
                 onPressed: _busy ? null : () => showServerDialog(context, ref),
                 icon: const Icon(Icons.dns_outlined, size: 18),
-                label: Text('Server: ${ref.watch(settingsProvider).serverUrl}', overflow: TextOverflow.ellipsis),
+                label: Text(tr('Server: {url}', {'url': ref.watch(settingsProvider).serverUrl}), overflow: TextOverflow.ellipsis),
               ),
             ),
           ],
@@ -329,7 +349,7 @@ Future<void> showServerDialog(BuildContext context, WidgetRef ref) async {
   final value = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Server manzili'),
+      title: Text(tr('Server manzili')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,12 +361,12 @@ Future<void> showServerDialog(BuildContext context, WidgetRef ref) async {
             decoration: const InputDecoration(hintText: 'http://192.168.1.10:8000/api'),
           ),
           const SizedBox(height: 8),
-          Text("Kompyuter IP manzili va port. Telefon va kompyuter bitta Wi-Fi'da bo'lishi kerak.", style: Theme.of(context).textTheme.bodySmall),
+          Text(tr("Kompyuter IP manzili va port. Telefon va kompyuter bitta Wi-Fi'da bo'lishi kerak."), style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Bekor')),
-        FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Saqlash')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Bekor'))),
+        FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: Text(tr('Saqlash'))),
       ],
     ),
   );
@@ -395,7 +415,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       });
       ref.read(authProvider.notifier).updateUser(User.fromJson(response['user'] as Json));
       if (mounted && !widget.required) {
-        showMessage(context, "Parol o'zgartirildi");
+        showMessage(context, tr("Parol o'zgartirildi"));
         Navigator.pop(context);
       }
     } on ApiException catch (error) {
@@ -413,37 +433,37 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Yangi parol'),
+        title: Text(tr('Yangi parol')),
         automaticallyImplyLeading: !widget.required,
-        actions: [if (widget.required) TextButton(onPressed: () => ref.read(authProvider.notifier).logout(), child: const Text('Chiqish'))],
+        actions: [if (widget.required) TextButton(onPressed: () => ref.read(authProvider.notifier).logout(), child: Text(tr('Chiqish')))],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           if (widget.required) ...[
-            const Banner2("Siz vaqtinchalik parol bilan kirdingiz. Davom etish uchun o'z parolingizni o'rnating."),
+            Banner2(tr("Siz vaqtinchalik parol bilan kirdingiz. Davom etish uchun o'z parolingizni o'rnating.")),
             const SizedBox(height: 16),
           ],
           if (_error != null && _error!.errors.isEmpty) ...[Banner2(_error!.userMessage, tone: Tone.danger), const SizedBox(height: 16)],
           TextField(
             controller: _current,
             obscureText: true,
-            decoration: InputDecoration(labelText: 'Joriy parol', errorText: _error?.fieldError('current_password')),
+            decoration: InputDecoration(labelText: tr('Joriy parol'), errorText: _error?.fieldError('current_password')),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: _password,
             obscureText: true,
-            decoration: InputDecoration(labelText: 'Yangi parol', helperText: 'Kamida 8 belgi', errorText: _error?.fieldError('password')),
+            decoration: InputDecoration(labelText: tr('Yangi parol'), helperText: tr('Kamida 8 belgi'), errorText: _error?.fieldError('password')),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: _confirm,
             obscureText: true,
-            decoration: const InputDecoration(labelText: 'Yangi parolni takrorlang'),
+            decoration: InputDecoration(labelText: tr('Yangi parolni takrorlang')),
           ),
           const SizedBox(height: 24),
-          FilledButton(onPressed: _busy ? null : _submit, child: Text(_busy ? 'Saqlanmoqda…' : 'Saqlash')),
+          FilledButton(onPressed: _busy ? null : _submit, child: Text(_busy ? tr('Saqlanmoqda…') : tr('Saqlash'))),
         ],
       ),
     );

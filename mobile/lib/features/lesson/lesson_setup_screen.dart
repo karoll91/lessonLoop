@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
@@ -54,7 +55,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
           await ref.read(boardProvider.notifier).attach(lessonId);
         } on ApiException catch (error) {
           if (mounted) {
-            showMessage(context, 'Dars boshlandi, lekin doskaga ulanmadi: ${error.userMessage}', error: true);
+            showMessage(context, tr('Dars boshlandi, lekin doskaga ulanmadi: {e}', {'e': error.userMessage}), error: true);
           }
         }
       }
@@ -73,7 +74,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const titles = ['Fan va mavzular', 'Savollar soni', 'Kim keldi?'];
+    final titles = [tr('Fan va mavzular'), tr('Savollar soni'), tr('Kim keldi?')];
     return PopScope(
       canPop: _step == 0,
       onPopInvokedWithResult: (didPop, _) {
@@ -84,7 +85,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            tooltip: _step == 0 ? 'Yopish' : 'Orqaga',
+            tooltip: _step == 0 ? tr('Yopish') : tr('Orqaga'),
             icon: Icon(_step == 0 ? Icons.close : Icons.arrow_back),
             onPressed: () => _step == 0 ? Navigator.pop(context) : setState(() => _step--),
           ),
@@ -92,7 +93,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(titles[_step]),
-              Text('${_step + 1}-qadam / 3', style: Theme.of(context).textTheme.bodySmall),
+              Text(tr('{n}-qadam / 3', {'n': _step + 1}), style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
           bottom: PreferredSize(
@@ -140,8 +141,8 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
       error: (error, _) => ErrorView(error: error, onRetry: () => ref.invalidate(coursesProvider)),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(
-            child: EmptyState(icon: Icons.groups_outlined, title: 'Kurs biriktirilmagan', text: "Admin sizga guruh va fan biriktirgach dars boshlay olasiz."),
+          return Center(
+            child: EmptyState(icon: Icons.groups_outlined, title: tr('Kurs biriktirilmagan'), text: tr("Admin sizga guruh va fan biriktirgach dars boshlay olasiz.")),
           );
         }
         final course = _course == null ? null : list.where((item) => item.id == _course!.id).firstOrNull;
@@ -156,8 +157,8 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                     initialValue: course?.id,
                     isExpanded: true,
                     decoration: InputDecoration(
-                      labelText: 'Guruh va fan',
-                      helperText: course == null ? null : 'Bu kurs bo\'yicha ${course.lessonsCount + 1}-dars bo\'ladi',
+                      labelText: tr('Guruh va fan'),
+                      helperText: course == null ? null : tr("Bu kurs bo'yicha {n}-dars bo'ladi", {'n': course.lessonsCount + 1}),
                     ),
                     items: [
                       for (final item in list)
@@ -180,14 +181,14 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                       data: (items) => [
                         Row(
                           children: [
-                            Text('Mavzular', style: Theme.of(context).textTheme.titleMedium),
+                            Text(tr('Mavzular'), style: Theme.of(context).textTheme.titleMedium),
                             const Spacer(),
-                            Text('${_topics.length} tanlandi · ${_available(items)} savol', style: Theme.of(context).textTheme.bodySmall),
+                            Text(tr('{a} tanlandi · {b} savol', {'a': _topics.length, 'b': _available(items)}), style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                         const SizedBox(height: 8),
                         if (items.isEmpty)
-                          const Banner2("Bu fanda mavzu yo'q. Mavzu va savollarni web panelda qo'shing.", tone: Tone.warn)
+                          Banner2(tr("Bu fanda mavzu yo'q. Mavzu va savollarni web panelda qo'shing."), tone: Tone.warn)
                         else
                           Section(
                             children: [
@@ -207,7 +208,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                 ],
               ),
             ),
-            _footer('Keyingi', course != null && _topics.isNotEmpty ? () => setState(() => _step = 1) : null),
+            _footer(tr('Keyingi'), course != null && _topics.isNotEmpty ? () => setState(() => _step = 1) : null),
           ],
         );
       },
@@ -229,7 +230,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text('Bu darsda nechta savol beriladi?', style: Theme.of(context).textTheme.titleMedium),
+              Text(tr('Bu darsda nechta savol beriladi?'), style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
@@ -241,7 +242,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                   children: [
                     IconButton(
                       iconSize: 32,
-                      tooltip: 'Kamaytirish',
+                      tooltip: tr('Kamaytirish'),
                       onPressed: count > 1 ? () => setState(() => _count = count - 1) : null,
                       icon: const Icon(Icons.remove),
                     ),
@@ -254,7 +255,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                     ),
                     IconButton(
                       iconSize: 32,
-                      tooltip: "Ko'paytirish",
+                      tooltip: tr("Ko'paytirish"),
                       onPressed: count < available ? () => setState(() => _count = count + 1) : null,
                       icon: const Icon(Icons.add),
                     ),
@@ -263,7 +264,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
               ),
               if (tooMany) ...[
                 const SizedBox(height: 8),
-                Text('Tanlangan mavzularda faqat $available ta savol bor. Mavzu qo\'shing yoki sonni kamaytiring.', style: TextStyle(color: c.danger)),
+                Text(tr("Tanlangan mavzularda faqat {n} ta savol bor. Mavzu qo'shing yoki sonni kamaytiring.", {'n': available}), style: TextStyle(color: c.danger)),
               ],
               const SizedBox(height: 16),
               Wrap(
@@ -272,16 +273,16 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                 children: [
                   for (final preset in {5, 8, 10, 15}.where((value) => value <= available))
                     ChoiceChip(label: Text('$preset'), selected: count == preset, onSelected: (_) => setState(() => _count = preset)),
-                  ChoiceChip(label: Text('Hammasi ($available)'), selected: count == available, onSelected: (_) => setState(() => _count = available)),
+                  ChoiceChip(label: Text(tr('Hammasi ({n})', {'n': available})), selected: count == available, onSelected: (_) => setState(() => _count = available)),
                 ],
               ),
               const SizedBox(height: 20),
-              Text("Oxirgi ${rules?.cooldownLessons ?? 4} darsda berilgan savollar oxiriga suriladi.", style: Theme.of(context).textTheme.bodySmall),
+              Text(tr('Oxirgi {n} darsda berilgan savollar oxiriga suriladi.', {'n': rules?.cooldownLessons ?? 4}), style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
         _footer(
-          'Keyingi',
+          tr('Keyingi'),
           tooMany || available == 0
               ? null
               : () => setState(() {
@@ -309,9 +310,9 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Row(
                 children: [
-                  Text('${present.length} / ${list.length} keldi', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(tr('{a} / {b} keldi', {'a': present.length, 'b': list.length}), style: const TextStyle(fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  TextButton(onPressed: () => setState(_absent.clear), child: const Text('Hammasi keldi')),
+                  TextButton(onPressed: () => setState(_absent.clear), child: Text(tr('Hammasi keldi'))),
                 ],
               ),
             ),
@@ -323,7 +324,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
             if (inPool < (_count ?? 0))
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Banner2('Randomga $inPool ta talaba tushadi, savol $_count ta. Dam olish muddati eng oldin tugaydiganlar qo\'shiladi.', tone: Tone.warn),
+                child: Banner2(tr("Randomga {a} ta talaba tushadi, savol {b} ta. Dam olish muddati eng oldin tugaydiganlar qo'shiladi.", {'a': inPool, 'b': _count}), tone: Tone.warn),
               ),
             Expanded(
               child: ListView(
@@ -337,7 +338,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                           controlAffinity: ListTileControlAffinity.leading,
                           tileColor: _absent.contains(student.id) ? context.colors.dangerSoft : null,
                           title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          secondary: _absent.contains(student.id) ? const Chip2('Kelmagan', tone: Tone.danger) : QueueChip(student.queue),
+                          secondary: _absent.contains(student.id) ? Chip2(tr('Kelmagan'), tone: Tone.danger) : QueueChip(student.queue),
                           onChanged: (checked) => setState(() => checked == true ? _absent.remove(student.id) : _absent.add(student.id)),
                         ),
                     ],
@@ -345,7 +346,7 @@ class _LessonSetupScreenState extends ConsumerState<LessonSetupScreen> {
                 ],
               ),
             ),
-            _footer(_busy ? 'Boshlanmoqda…' : 'Darsni boshlash', _busy || present.isEmpty ? null : () => _start(list)),
+            _footer(_busy ? tr('Boshlanmoqda…') : tr('Darsni boshlash'), _busy || present.isEmpty ? null : () => _start(list)),
           ],
         );
       },
@@ -365,10 +366,10 @@ class QueueChip extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return switch (info.state) {
-      QueueState.neverAsked => const Chip2("So'ralmagan ×2", tone: Tone.accent),
-      QueueState.debtor => const Chip2('Qarzdor ×2', tone: Tone.warn),
-      QueueState.resting => Chip2('Dam · ${info.restLessonsLeft} dars', tone: Tone.info),
-      QueueState.queue => const Chip2('Navbatda'),
+      QueueState.neverAsked => Chip2(tr("So'ralmagan ×2"), tone: Tone.accent),
+      QueueState.debtor => Chip2(tr('Qarzdor ×2'), tone: Tone.warn),
+      QueueState.resting => Chip2(tr('Dam · {n} dars', {'n': info.restLessonsLeft}), tone: Tone.info),
+      QueueState.queue => Chip2(tr('Navbatda')),
     };
   }
 }

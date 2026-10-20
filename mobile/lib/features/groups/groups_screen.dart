@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
@@ -24,7 +25,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
     final courses = ref.watch(coursesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Guruhlar')),
+      appBar: AppBar(title: Text(tr('Guruhlar'))),
       body: courses.when(
         loading: () => const Loading(),
         error: (error, _) => ErrorView(error: error, onRetry: () => ref.invalidate(coursesProvider)),
@@ -37,17 +38,17 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
               children: [
                 TextField(
                   onChanged: (value) => setState(() => _search = value),
-                  decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Guruh yoki fan'),
+                  decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: tr('Guruh yoki fan')),
                 ),
                 const SizedBox(height: 12),
                 if (list.isEmpty)
-                  const EmptyState(
+                  EmptyState(
                     icon: Icons.groups_outlined,
-                    title: "Hali guruh yo'q",
-                    text: "Guruh va fanlarni admin web panelda biriktiradi. Keyin ular shu yerda chiqadi.",
+                    title: tr("Hali guruh yo'q"),
+                    text: tr("Guruh va fanlarni admin web panelda biriktiradi. Keyin ular shu yerda chiqadi."),
                   )
                 else if (filtered.isEmpty)
-                  EmptyState(icon: Icons.search_off, title: '«$_search» topilmadi', text: 'Guruh yoki fan nomini tekshiring.')
+                  EmptyState(icon: Icons.search_off, title: tr('«{q}» topilmadi', {'q': _search}), text: tr('Guruh yoki fan nomini tekshiring.'))
                 else
                   for (final course in filtered) ...[
                     Card(
@@ -55,7 +56,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         leading: Avatar(course.groupName),
                         title: Text(course.groupName, style: Theme.of(context).textTheme.titleMedium),
-                        subtitle: Text('${course.subjectName} · ${course.lessonsCount} dars'),
+                        subtitle: Text('${course.subjectName} · ${tr('{n} dars', {'n': course.lessonsCount})}'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => CourseScreen(course: course))),
                       ),
@@ -106,7 +107,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
           child: FilledButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => LessonSetupScreen(course: course))),
             icon: const Icon(Icons.play_arrow_rounded),
-            label: const Text('Shu guruh bilan dars boshlash'),
+            label: Text(tr('Shu guruh bilan dars boshlash')),
           ),
         ),
       ),
@@ -125,7 +126,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      ChoiceChip(label: Text('Hammasi ${list.length}'), selected: _filter == null, onSelected: (_) => setState(() => _filter = null)),
+                      ChoiceChip(label: Text(tr('Hammasi {n}', {'n': list.length})), selected: _filter == null, onSelected: (_) => setState(() => _filter = null)),
                       for (final state in QueueState.values) ...[
                         const SizedBox(width: 8),
                         ChoiceChip(
@@ -139,9 +140,9 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (list.isEmpty)
-                  const EmptyState(icon: Icons.person_outline, title: "Guruhda talaba yo'q", text: "Talabalarni web panelda import qiling.")
+                  EmptyState(icon: Icons.person_outline, title: tr("Guruhda talaba yo'q"), text: tr("Talabalarni web panelda import qiling."))
                 else if (shown.isEmpty)
-                  EmptyState(icon: Icons.filter_alt_off_outlined, title: "«${_filter!.label}» holatida talaba yo'q")
+                  EmptyState(icon: Icons.filter_alt_off_outlined, title: tr("«{s}» holatida talaba yo'q", {'s': _filter!.label}))
                 else
                   Section(
                     children: [
@@ -173,9 +174,9 @@ Tone _tone(QueueState? state) => switch (state) {
 
 String _subtitle(QueueInfo? queue) {
   if (queue == null || queue.askedCount == 0) {
-    return "Hech so'ralmagan";
+    return tr("Hech so'ralmagan");
   }
-  return 'Oxirgi: ${queue.lastScore ?? '—'} · ${queue.lastSequence ?? '?'}-dars · ${queue.askedCount} marta';
+  return tr('Oxirgi: {score} · {n}-dars · {count} marta', {'score': queue.lastScore ?? '—', 'n': queue.lastSequence ?? '?', 'count': queue.askedCount});
 }
 
 /// M10 · 2–3 — one student's queue position and scores in this course.
@@ -226,20 +227,20 @@ class _StudentCard extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             if (queue?.state == QueueState.resting) ...[
-              Text('Dam olish: ${cooldown - queue!.restLessonsLeft} / $cooldown dars o\'tdi', style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(tr("Dam olish: {a} / {b} dars o'tdi", {'a': cooldown - queue!.restLessonsLeft, 'b': cooldown}), style: const TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(value: (cooldown - queue.restLessonsLeft) / cooldown, minHeight: 8, backgroundColor: c.line, color: c.info),
               ),
               const SizedBox(height: 6),
-              Text('Yana ${queue.restLessonsLeft} darsdan keyin randomga qaytadi.', style: Theme.of(context).textTheme.bodySmall),
+              Text(tr('Yana {n} darsdan keyin randomga qaytadi.', {'n': queue.restLessonsLeft}), style: Theme.of(context).textTheme.bodySmall),
             ] else if (queue?.state == QueueState.debtor)
-              Banner2('Oxirgi baho ${queue!.lastScore ?? 0} — keyingi darslarda tanlanish ehtimoli yuqori.', tone: Tone.warn)
+              Banner2(tr('Oxirgi baho {n} — keyingi darslarda tanlanish ehtimoli yuqori.', {'n': queue!.lastScore ?? 0}), tone: Tone.warn)
             else if (queue?.state == QueueState.neverAsked)
-              const Banner2("Hali so'ralmagan — tanlanish ehtimoli yuqori.", tone: Tone.accent),
+              Banner2(tr("Hali so'ralmagan — tanlanish ehtimoli yuqori."), tone: Tone.accent),
             const SizedBox(height: 16),
-            Text('Baholar', style: Theme.of(context).textTheme.titleMedium),
+            Text(tr('Baholar'), style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             journal.when(
               loading: () => const Loading(),
@@ -249,7 +250,7 @@ class _StudentCard extends ConsumerWidget {
                 final lessons = (data['lessons'] as List).cast<Json>();
                 final cells = ((row?['cells'] as List?) ?? const []).cast<Json>().where((cell) => cell['status'] != 'not_asked').toList();
                 if (cells.isEmpty) {
-                  return Text("Bu fandan hali baho yo'q.", style: TextStyle(color: c.ink2));
+                  return Text(tr("Bu fandan hali baho yo'q."), style: TextStyle(color: c.ink2));
                 }
                 return Wrap(
                   spacing: 8,
@@ -257,8 +258,10 @@ class _StudentCard extends ConsumerWidget {
                   children: [
                     for (final cell in cells)
                       Chip2(
-                        '${lessons.firstWhere((lesson) => lesson['id'] == cell['lesson_id'], orElse: () => {'sequence': '?'})['sequence']}-dars: '
-                        '${cell['status'] == 'absent' ? "yo'q" : (cell['score'] ?? '—')}',
+                        tr('{n}-dars: {v}', {
+                          'n': lessons.firstWhere((lesson) => lesson['id'] == cell['lesson_id'], orElse: () => {'sequence': '?'})['sequence'],
+                          'v': cell['status'] == 'absent' ? tr("yo'q") : (cell['score'] ?? '—'),
+                        }),
                         tone: cell['status'] == 'absent' ? Tone.neutral : ((cell['score'] as int? ?? 0) >= (rules?.passScore ?? 60) ? Tone.pass : Tone.warn),
                       ),
                   ],

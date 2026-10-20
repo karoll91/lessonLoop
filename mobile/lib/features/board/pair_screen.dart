@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/theme.dart';
 import '../../ui/widgets.dart';
 import 'board_controller.dart';
@@ -39,7 +40,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
   Future<void> _pair(String raw) async {
     final code = parsePairCode(raw);
     if (code == null) {
-      setState(() => _error = 'Kod 6 ta raqamdan iborat bo\'lishi kerak');
+      setState(() => _error = tr('Kod 6 ta raqamdan iborat bo\'lishi kerak'));
       return;
     }
     if (_busy) {
@@ -68,7 +69,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
 
     if (board != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Doska')),
+        appBar: AppBar(title: Text(tr('Doska'))),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -81,10 +82,10 @@ class _PairScreenState extends ConsumerState<PairScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Doska ulandi', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+            Text(tr('Doska ulandi'), textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 6),
             Text(
-              'Endi doskadagi ekranni shu telefondan boshqarasiz. Dars boshlanganda savollar doskada chiqadi.',
+              tr('Endi doskadagi ekranni shu telefondan boshqarasiz. Dars boshlanganda savollar doskada chiqadi.'),
               textAlign: TextAlign.center,
               style: TextStyle(color: c.ink2),
             ),
@@ -92,26 +93,26 @@ class _PairScreenState extends ConsumerState<PairScreen> {
             Section(
               children: [
                 ListTile(
-                  title: const Text('Doska'),
+                  title: Text(tr('Doska')),
                   trailing: Text(board.name ?? '#${board.boardId}', style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
-                const ListTile(
-                  title: Text('Holat'),
-                  trailing: Chip2('Sinxron', tone: Tone.pass),
+                ListTile(
+                  title: Text(tr('Holat')),
+                  trailing: Chip2(tr('Sinxron'), tone: Tone.pass),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Tayyor')),
+            FilledButton(onPressed: () => Navigator.pop(context), child: Text(tr('Tayyor'))),
             const SizedBox(height: 8),
-            OutlinedButton(onPressed: () => ref.read(boardProvider.notifier).release(), child: const Text('Doskani uzish')),
+            OutlinedButton(onPressed: () => ref.read(boardProvider.notifier).release(), child: Text(tr('Doskani uzish'))),
           ],
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Doskaga ulash')),
+      appBar: AppBar(title: Text(tr('Doskaga ulash'))),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -155,7 +156,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Doskadagi QR kodni ramkaga joylashtiring',
+              tr('Doskadagi QR kodni ramkaga joylashtiring'),
               textAlign: TextAlign.center,
               style: TextStyle(color: c.ink2),
             ),
@@ -165,14 +166,14 @@ class _PairScreenState extends ConsumerState<PairScreen> {
                 const Expanded(child: Divider()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('yoki', style: TextStyle(color: c.ink3)),
+                  child: Text(tr('yoki'), style: TextStyle(color: c.ink3)),
                 ),
                 const Expanded(child: Divider()),
               ],
             ),
             const SizedBox(height: 16),
           ] else ...[
-            const Banner2("Kamera yo'q — doskadagi 6 xonali kodni kiriting."),
+            Banner2(tr("Kamera yo'q — doskadagi 6 xonali kodni kiriting.")),
             const SizedBox(height: 16),
           ],
           TextField(
@@ -187,13 +188,13 @@ class _PairScreenState extends ConsumerState<PairScreen> {
                 _pair(value);
               }
             },
-            decoration: InputDecoration(labelText: '6 xonali kod', counterText: '', errorText: _error),
+            decoration: InputDecoration(labelText: tr('6 xonali kod'), counterText: '', errorText: _error),
           ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : () => _pair(_code.text), child: Text(_busy ? 'Ulanmoqda…' : 'Ulash')),
+          FilledButton(onPressed: _busy ? null : () => _pair(_code.text), child: Text(_busy ? tr('Ulanmoqda…') : tr('Ulash'))),
           const SizedBox(height: 16),
           Text(
-            "Doskadagi kompyuterda admin paneldagi «Doska rejimi» ochiladi. Kod 5 daqiqa amal qiladi.",
+            tr("Doskadagi kompyuterda admin paneldagi «Doska rejimi» ochiladi. Kod 5 daqiqa amal qiladi."),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall,
           ),

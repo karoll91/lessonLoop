@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import 'i18n.dart';
+
 /// A failed API call with the server's message, error code and field errors.
 class ApiException implements Exception {
   ApiException(this.status, this.message, {this.code, this.errors = const {}});
@@ -14,10 +16,14 @@ class ApiException implements Exception {
 
   bool get isOffline => status == 0;
 
-  String? fieldError(String field) => errors[field]?.first;
+  String? fieldError(String field) {
+    final error = errors[field]?.first;
+    return error == null ? null : trServer(error);
+  }
 
   /// The first validation message for 422, otherwise the server message.
-  String get userMessage => status == 422 && errors.isNotEmpty ? errors.values.first.first : message;
+  /// Server texts are Uzbek Latin; shown in the chosen language.
+  String get userMessage => trServer(status == 422 && errors.isNotEmpty ? errors.values.first.first : message);
 
   @override
   String toString() => 'ApiException($status, $message)';
@@ -95,4 +101,4 @@ class ApiClient {
 }
 
 /// A readable message for any error thrown while talking to the API.
-String errorText(Object error) => error is ApiException ? error.userMessage : "Kutilmagan xatolik: $error";
+String errorText(Object error) => error is ApiException ? error.userMessage : tr('Kutilmagan xatolik: {e}', {'e': error});

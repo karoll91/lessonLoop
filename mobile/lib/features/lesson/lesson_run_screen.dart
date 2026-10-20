@@ -1,3 +1,4 @@
+import '../../core/i18n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -47,7 +48,7 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   Future<void> _sendQueued() async {
     await _outbox.flush();
     if (ref.read(outboxProvider).hasLesson(widget.lessonId)) {
-      throw ApiException(0, "Telefonda saqlangan baholar hali yuborilmadi. Internet ulanishini tekshiring.");
+      throw ApiException(0, tr("Telefonda saqlangan baholar hali yuborilmadi. Internet ulanishini tekshiring."));
     }
   }
   @override
@@ -212,7 +213,7 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
       _phase = _Phase.idle;
     });
     if (mounted) {
-      showMessage(context, "Internet yo'q. Baho telefonda saqlandi va aloqa tiklanganda o'zi yuboriladi.");
+      showMessage(context, tr("Internet yo'q. Baho telefonda saqlandi va aloqa tiklanganda o'zi yuboriladi."));
     }
     return null;
   }
@@ -275,7 +276,7 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
   });
 
   Future<void> _offerFinish(String reason) async {
-    final finish = await confirm(context, title: 'Davom etib bo\'lmaydi', text: reason, action: 'Darsni yakunlash');
+    final finish = await confirm(context, title: tr('Davom etib bo\'lmaydi'), text: reason, action: tr('Darsni yakunlash'));
     if (finish) {
       await _finish();
     }
@@ -285,9 +286,9 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
     final lesson = _lesson!;
     final left = lesson.questionCount - lesson.scored.length;
     final text = _current != null
-        ? 'Javob kutilayotgan savol bekor qilinadi. ${lesson.scored.length} ta baho saqlangan.'
-        : (left > 0 ? 'Yana $left ta savol qoldi. Baholar saqlangan.' : 'Barcha savollar berildi.');
-    if (await confirm(context, title: 'Darsni yakunlaysizmi?', text: text, action: 'Yakunlash')) {
+        ? tr('Javob kutilayotgan savol bekor qilinadi. {n} ta baho saqlangan.', {'n': lesson.scored.length})
+        : (left > 0 ? tr('Yana {n} ta savol qoldi. Baholar saqlangan.', {'n': left}) : tr('Barcha savollar berildi.'));
+    if (await confirm(context, title: tr('Darsni yakunlaysizmi?'), text: text, action: tr('Yakunlash'))) {
       await _finish();
     }
   }
@@ -300,18 +301,18 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
     return Scaffold(
       appBar: AppBar(
         title: lesson == null
-            ? const Text('Dars')
+            ? Text(tr('Dars'))
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${lesson.group ?? ''} · ${lesson.sequence}-dars', overflow: TextOverflow.ellipsis),
+                  Text('${lesson.group ?? ''} · ${tr('{n}-dars', {'n': lesson.sequence})}', overflow: TextOverflow.ellipsis),
                   Text(lesson.subject ?? '', style: Theme.of(context).textTheme.bodySmall, overflow: TextOverflow.ellipsis),
                 ],
               ),
         actions: [
           if (_phase != _Phase.finished && _phase != _Phase.loading) ...[
             _BoardButton(board: board, busy: _busy, run: _run),
-            IconButton(tooltip: 'Darsni yakunlash', onPressed: _busy ? null : _askFinish, icon: const Icon(Icons.stop_circle_outlined)),
+            IconButton(tooltip: tr('Darsni yakunlash'), onPressed: _busy ? null : _askFinish, icon: const Icon(Icons.stop_circle_outlined)),
           ],
         ],
       ),
@@ -337,13 +338,13 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             child: Banner2(
-              "${queued.length} ta baho telefonda saqlangan, hali yuborilmagan",
+              tr('{n} ta baho telefonda saqlangan, hali yuborilmagan', {'n': queued.length}),
               tone: Tone.warn,
               icon: Icons.cloud_off_outlined,
-              action: 'Yuborish',
+              action: tr('Yuborish'),
               onAction: () => _run(() async {
                 if (await _outbox.flush() && mounted) {
-                  showMessage(context, 'Baholar yuborildi');
+                  showMessage(context, tr('Baholar yuborildi'));
                 }
               }),
             ),
@@ -351,7 +352,7 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
         if (outbox.rejected.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            child: Banner2("Saqlanmadi — ${outbox.rejected.join('; ')}", tone: Tone.danger, action: 'Yopish', onAction: _outbox.dismissRejected),
+            child: Banner2(tr('Saqlanmadi — {list}', {'list': outbox.rejected.join('; ')}), tone: Tone.danger, action: tr('Yopish'), onAction: _outbox.dismissRejected),
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -407,26 +408,26 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text("O'tkazish sababi", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              child: Text(tr("O'tkazish sababi"), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             ),
             ListTile(
               leading: const Icon(Icons.voice_over_off_outlined),
-              title: const Text('Javob bermadi'),
-              subtitle: const Text("0 ball, talaba qarzdor bo'ladi"),
+              title: Text(tr('Javob bermadi')),
+              subtitle: Text(tr("0 ball, talaba qarzdor bo'ladi")),
               onTap: () => Navigator.pop(context, 'no_answer'),
             ),
             ListTile(
               leading: const Icon(Icons.person_off_outlined),
-              title: const Text("Darsda yo'q ekan"),
-              subtitle: const Text('Baho qo\'yilmaydi, navbatdagi o\'rni saqlanadi'),
+              title: Text(tr("Darsda yo'q ekan")),
+              subtitle: Text(tr('Baho qo\'yilmaydi, navbatdagi o\'rni saqlanadi')),
               onTap: () => Navigator.pop(context, 'absent'),
             ),
             ListTile(
               leading: const Icon(Icons.shuffle),
-              title: const Text('Boshqa talaba'),
-              subtitle: const Text('Shu savol boshqa talabaga beriladi'),
+              title: Text(tr('Boshqa talaba')),
+              subtitle: Text(tr('Shu savol boshqa talabaga beriladi')),
               onTap: () => Navigator.pop(context, 'redraw'),
             ),
             const SizedBox(height: 8),
@@ -455,12 +456,12 @@ class _BoardButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = board;
     if (state == null) {
-      return IconButton(tooltip: 'Doskaga ulash', onPressed: () => openPairing(context), icon: const Icon(Icons.cast_outlined));
+      return IconButton(tooltip: tr('Doskaga ulash'), onPressed: () => openPairing(context), icon: const Icon(Icons.cast_outlined));
     }
     final suspended = state.screen == 'pause' || state.screen == 'blackout';
     final controller = ref.read(boardProvider.notifier);
     return PopupMenuButton<String>(
-      tooltip: 'Doska',
+      tooltip: tr('Doska'),
       enabled: !busy,
       icon: Icon(Icons.cast_connected, color: context.colors.accent),
       onSelected: (value) => run(() async {
@@ -473,24 +474,24 @@ class _BoardButton extends ConsumerWidget {
       }),
       itemBuilder: (context) => [
         if (suspended)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'resume',
-            child: ListTile(leading: Icon(Icons.play_arrow), title: Text('Doskani davom ettirish')),
+            child: ListTile(leading: Icon(Icons.play_arrow), title: Text(tr('Doskani davom ettirish'))),
           )
         else ...[
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'pause',
-            child: ListTile(leading: Icon(Icons.pause), title: Text('Tanaffus')),
+            child: ListTile(leading: Icon(Icons.pause), title: Text(tr('Tanaffus'))),
           ),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'blackout',
-            child: ListTile(leading: Icon(Icons.visibility_off_outlined), title: Text('Qora ekran')),
+            child: ListTile(leading: Icon(Icons.visibility_off_outlined), title: Text(tr('Qora ekran'))),
           ),
         ],
         const PopupMenuDivider(),
-        CheckedPopupMenuItem(value: 'opt:show_student_name', checked: state.option('show_student_name'), child: const Text('Talaba ismini ko\'rsatish')),
-        CheckedPopupMenuItem(value: 'opt:show_answer', checked: state.option('show_answer'), child: const Text("To'g'ri javobni ko'rsatish")),
-        CheckedPopupMenuItem(value: 'opt:show_score', checked: state.option('show_score'), child: const Text("Bahoni ko'rsatish")),
+        CheckedPopupMenuItem(value: 'opt:show_student_name', checked: state.option('show_student_name'), child: Text(tr('Talaba ismini ko\'rsatish'))),
+        CheckedPopupMenuItem(value: 'opt:show_answer', checked: state.option('show_answer'), child: Text(tr("To'g'ri javobni ko'rsatish"))),
+        CheckedPopupMenuItem(value: 'opt:show_score', checked: state.option('show_score'), child: Text(tr("Bahoni ko'rsatish"))),
       ],
     );
   }
@@ -530,9 +531,9 @@ class _DrawingState extends State<_Drawing> with SingleTickerProviderStateMixin 
             ),
           ),
           const SizedBox(height: 24),
-          Text('Tanlanmoqda…', style: Theme.of(context).textTheme.titleLarge),
+          Text(tr('Tanlanmoqda…'), style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 6),
-          Text("Navbat, qarzdorlik va dam olish qoidalari bo'yicha", style: TextStyle(color: c.ink2)),
+          Text(tr("Navbat, qarzdorlik va dam olish qoidalari bo'yicha"), style: TextStyle(color: c.ink2)),
         ],
       ),
     );
@@ -573,9 +574,9 @@ class _Idle extends StatelessWidget {
                       children: [
                         Text(result.studentName, style: const TextStyle(fontWeight: FontWeight.w700)),
                         Text(switch (result.status) {
-                          'absent' => "Yo'q ekan — navbatdagi o'rni saqlandi",
-                          'no_answer' => "Javob bermadi — qarzdor",
-                          _ => (result.score ?? 0) >= passScore ? "O'tdi — dam olish navbatiga" : "Qoniqarsiz — qayta navbatga",
+                          'absent' => tr("Yo'q ekan — navbatdagi o'rni saqlandi"),
+                          'no_answer' => tr("Javob bermadi — qarzdor"),
+                          _ => (result.score ?? 0) >= passScore ? tr("O'tdi — dam olish navbatiga") : tr("Qoniqarsiz — qayta navbatga"),
                         }, style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
@@ -591,19 +592,19 @@ class _Idle extends StatelessWidget {
         Icon(done ? Icons.flag_outlined : Icons.casino_outlined, size: 72, color: c.accent),
         const SizedBox(height: 16),
         Text(
-          done ? 'Barcha savollar berildi' : (lesson.scored.isEmpty ? 'Birinchi talabani tanlang' : 'Keyingi talaba'),
+          done ? tr('Barcha savollar berildi') : (lesson.scored.isEmpty ? tr('Birinchi talabani tanlang') : tr('Keyingi talaba')),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 6),
         Text(
-          done ? 'Darsni yakunlab natijalarni ko\'ring.' : 'Random adolatli: kim so\'ralmagan va qarzdor bo\'lsa, ehtimoli yuqori.',
+          done ? tr('Darsni yakunlab natijalarni ko\'ring.') : tr('Random adolatli: kim so\'ralmagan va qarzdor bo\'lsa, ehtimoli yuqori.'),
           textAlign: TextAlign.center,
           style: TextStyle(color: c.ink2),
         ),
         const SizedBox(height: 28),
         if (done)
-          FilledButton.icon(onPressed: busy ? null : onFinish, icon: const Icon(Icons.flag), label: const Text('Darsni yakunlash'))
+          FilledButton.icon(onPressed: busy ? null : onFinish, icon: const Icon(Icons.flag), label: Text(tr('Darsni yakunlash')))
         else ...[
           FilledButton.icon(
             onPressed: busy ? null : onDraw,
@@ -612,10 +613,10 @@ class _Idle extends StatelessWidget {
               textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             icon: const Icon(Icons.casino),
-            label: const Text('Random'),
+            label: Text(tr('Random')),
           ),
           const SizedBox(height: 10),
-          OutlinedButton(onPressed: busy ? null : onFinish, child: const Text('Darsni yakunlash')),
+          OutlinedButton(onPressed: busy ? null : onFinish, child: Text(tr('Darsni yakunlash'))),
         ],
       ],
     );
@@ -689,7 +690,7 @@ class _QuestionViewState extends State<_QuestionView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(answer.studentName, style: Theme.of(context).textTheme.titleLarge),
-                  if (answer.pickReason != null) Text('Random: ${QueueState.parse(answer.pickReason).label}', style: Theme.of(context).textTheme.bodySmall),
+                  if (answer.pickReason != null) Text(tr('Random: {r}', {'r': QueueState.parse(answer.pickReason).label}), style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -705,8 +706,8 @@ class _QuestionViewState extends State<_QuestionView> {
                 Wrap(
                   spacing: 6,
                   children: [
-                    Chip2(question?.isTest == true ? 'Test' : 'Ochiq savol', tone: question?.isTest == true ? Tone.info : Tone.neutral),
-                    Chip2(difficultyLabels[question?.difficulty] ?? ''),
+                    Chip2(question?.isTest == true ? tr('Test') : tr('Ochiq savol'), tone: question?.isTest == true ? Tone.info : Tone.neutral),
+                    Chip2(tr(difficultyLabels[question?.difficulty] ?? '')),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -735,12 +736,12 @@ class _QuestionViewState extends State<_QuestionView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "To'g'ri javob",
+                          tr("To'g'ri javob"),
                           style: TextStyle(color: c.pass, fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          question?.hasAnswer == true ? question!.answerText! : "Bu savolga namuna javob kiritilmagan.",
+                          question?.hasAnswer == true ? question!.answerText! : tr("Bu savolga namuna javob kiritilmagan."),
                           style: const TextStyle(height: 1.4),
                         ),
                       ],
@@ -749,7 +750,7 @@ class _QuestionViewState extends State<_QuestionView> {
                 TextButton.icon(
                   onPressed: widget.busy ? null : widget.onToggle,
                   icon: Icon(widget.revealed ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                  label: Text(widget.revealed ? 'Javobni yashirish' : "To'g'ri javobni ko'rsatish"),
+                  label: Text(widget.revealed ? tr('Javobni yashirish') : tr("To'g'ri javobni ko'rsatish")),
                 ),
               ],
             ),
@@ -758,18 +759,18 @@ class _QuestionViewState extends State<_QuestionView> {
         const SizedBox(height: 20),
         if (question?.isTest == true && _option != null) ...[
           Banner2(
-            _option == question!.correctOption?.label ? "To'g'ri variant — 100 ball" : "Noto'g'ri variant — 0 ball",
+            _option == question!.correctOption?.label ? tr("To'g'ri variant — 100 ball") : tr("Noto'g'ri variant — 0 ball"),
             tone: _option == question.correctOption?.label ? Tone.pass : Tone.warn,
           ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: widget.busy ? null : () => widget.onGrade(option: _option),
-            child: const Text('Saqlash'),
+            child: Text(tr('Saqlash')),
           ),
         ] else ...[
           Row(
             children: [
-              Text('Baho', style: Theme.of(context).textTheme.titleMedium),
+              Text(tr('Baho'), style: Theme.of(context).textTheme.titleMedium),
               const Spacer(),
               SizedBox(
                 width: 88,
@@ -813,7 +814,7 @@ class _QuestionViewState extends State<_QuestionView> {
               children: [
                 Text('0', style: Theme.of(context).textTheme.bodySmall),
                 const Spacer(),
-                Text("${widget.passScore} — o'tish chegarasi", style: Theme.of(context).textTheme.bodySmall),
+                Text(tr("{n} — o'tish chegarasi", {'n': widget.passScore}), style: Theme.of(context).textTheme.bodySmall),
                 const Spacer(),
                 Text('100', style: Theme.of(context).textTheme.bodySmall),
               ],
@@ -831,17 +832,17 @@ class _QuestionViewState extends State<_QuestionView> {
           const SizedBox(height: 12),
           if (_touched && !invalid)
             Text(
-              passed ? "O'tdi — talaba dam olish navbatiga o'tadi" : "Qoniqarsiz — talaba qarzdor bo'lib, randomga qaytadi",
+              passed ? tr("O'tdi — talaba dam olish navbatiga o'tadi") : tr("Qoniqarsiz — talaba qarzdor bo'lib, randomga qaytadi"),
               style: TextStyle(color: passed ? c.pass : c.warn, fontWeight: FontWeight.w600),
             ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: widget.busy || invalid || !_touched ? null : () => widget.onGrade(score: score),
-            child: Text(widget.busy ? 'Saqlanmoqda…' : (_touched ? '$score ball qo\'yish' : 'Bahoni tanlang')),
+            child: Text(widget.busy ? tr('Saqlanmoqda…') : (_touched ? tr("{n} ball qo'yish", {'n': score}) : tr('Bahoni tanlang'))),
           ),
         ],
         const SizedBox(height: 8),
-        OutlinedButton.icon(onPressed: widget.busy ? null : widget.onSkip, icon: const Icon(Icons.skip_next_outlined), label: const Text("O'tkazish")),
+        OutlinedButton.icon(onPressed: widget.busy ? null : widget.onSkip, icon: const Icon(Icons.skip_next_outlined), label: Text(tr("O'tkazish"))),
       ],
     );
   }
@@ -887,7 +888,7 @@ class _OptionTile extends StatelessWidget {
               Expanded(child: Text(option.text)),
               if (chosen)
                 Text(
-                  'Talaba',
+                  tr('Talaba'),
                   style: TextStyle(color: c.accent, fontWeight: FontWeight.w700, fontSize: 12),
                 ),
             ],
@@ -923,9 +924,9 @@ class _Summary extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text('Dars yakunlandi', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+        Text(tr('Dars yakunlandi'), textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
         Text(
-          '${formatTime(lesson.startedAt)} — ${formatTime(lesson.finishedAt)} · ${scored.length} ta savol',
+          '${formatTime(lesson.startedAt)} — ${formatTime(lesson.finishedAt)} · ${tr('{n} ta savol', {'n': scored.length})}',
           textAlign: TextAlign.center,
           style: TextStyle(color: c.ink2),
         ),
@@ -934,25 +935,25 @@ class _Summary extends ConsumerWidget {
           children: [
             Expanded(
               child: Kpi(
-                label: "O'rtacha",
+                label: tr("O'rtacha"),
                 value: lesson.average?.toString() ?? '—',
                 color: c.score(lesson.average, passScore: passScore),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Kpi(label: "O'tdi", value: '$passed', color: c.pass),
+              child: Kpi(label: tr("O'tdi"), value: '$passed', color: c.pass),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Kpi(label: 'Qarzdor', value: '${scored.length - passed}', color: c.warn),
+              child: Kpi(label: tr('Qarzdor'), value: '${scored.length - passed}', color: c.warn),
             ),
           ],
         ),
         const SizedBox(height: 20),
         if (scored.isEmpty)
-          const Card(
-            child: EmptyState(icon: Icons.inbox_outlined, title: "Bu darsda baho qo'yilmadi"),
+          Card(
+            child: EmptyState(icon: Icons.inbox_outlined, title: tr("Bu darsda baho qo'yilmadi")),
           )
         else
           Section(
@@ -967,7 +968,7 @@ class _Summary extends ConsumerWidget {
             ],
           ),
         const SizedBox(height: 20),
-        FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Bosh sahifaga')),
+        FilledButton(onPressed: () => Navigator.pop(context), child: Text(tr('Bosh sahifaga'))),
       ],
     );
   }

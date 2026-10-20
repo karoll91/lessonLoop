@@ -101,7 +101,8 @@ extension AppColorsContext on BuildContext {
 
 ThemeData buildTheme(Brightness brightness) {
   final c = brightness == Brightness.dark ? AppColors.dark : AppColors.light;
-  final base = ThemeData(brightness: brightness, useMaterial3: true);
+  // Manrope, as on the classroom board; it covers Latin and Cyrillic.
+  final base = ThemeData(brightness: brightness, useMaterial3: true, fontFamily: 'Manrope');
   final radius = BorderRadius.circular(12);
 
   return base.copyWith(
@@ -196,7 +197,8 @@ ThemeData buildTheme(Brightness brightness) {
       surfaceTintColor: Colors.transparent,
       iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(color: states.contains(WidgetState.selected) ? c.accent : c.ink2)),
       labelTextStyle: WidgetStateProperty.resolveWith(
-        (states) => TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: states.contains(WidgetState.selected) ? c.accent : c.ink2),
+        // 11 px keeps «Созламалар» / «Настройки» on one line on a 360 px phone.
+        (states) => TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: -0.2, color: states.contains(WidgetState.selected) ? c.accent : c.ink2),
       ),
     ),
     snackBarTheme: SnackBarThemeData(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api.dart';
+import '../core/i18n.dart';
 import '../core/theme.dart';
 
 enum Tone { neutral, accent, pass, warn, danger, info }
@@ -130,9 +131,9 @@ class ErrorView extends StatelessWidget {
     return Center(
       child: EmptyState(
         icon: offline ? Icons.wifi_off : Icons.error_outline,
-        title: offline ? "Serverga ulanib bo'lmadi" : "Ma'lumot yuklanmadi",
+        title: offline ? tr("Serverga ulanib bo'lmadi") : tr("Ma'lumot yuklanmadi"),
         text: errorText(error),
-        action: 'Qayta urinish',
+        action: tr('Qayta urinish'),
         onAction: onRetry,
       ),
     );
@@ -259,7 +260,7 @@ Future<bool> confirm(BuildContext context, {required String title, required Stri
       title: Text(title),
       content: Text(text),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Bekor')),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Bekor'))),
         FilledButton(
           style: danger ? FilledButton.styleFrom(backgroundColor: context.colors.danger) : null,
           onPressed: () => Navigator.pop(context, true),
@@ -271,8 +272,16 @@ Future<bool> confirm(BuildContext context, {required String title, required Stri
   return result ?? false;
 }
 
-const _months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
-const _weekdays = ['dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma', 'shanba', 'yakshanba'];
+const _months = {
+  AppLanguage.uzLatn: ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'],
+  AppLanguage.uzCyrl: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],
+  AppLanguage.ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+};
+const _weekdays = {
+  AppLanguage.uzLatn: ['dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma', 'shanba', 'yakshanba'],
+  AppLanguage.uzCyrl: ['душанба', 'сешанба', 'чоршанба', 'пайшанба', 'жума', 'шанба', 'якшанба'],
+  AppLanguage.ru: ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'],
+};
 
 String _pad(int value) => value.toString().padLeft(2, '0');
 
@@ -282,8 +291,10 @@ String formatDate(DateTime? date) => date == null ? '—' : '${_pad(date.day)}.$
 
 String formatDateTime(DateTime? date) => date == null ? '—' : '${_pad(date.day)}.${_pad(date.month)} ${formatTime(date)}';
 
-/// «Dushanba, 19-oktabr»
+/// «Dushanba, 19-oktabr» / «Понедельник, 19 октября»
 String formatLongDate(DateTime date) {
-  final weekday = _weekdays[date.weekday - 1];
-  return '${weekday[0].toUpperCase()}${weekday.substring(1)}, ${date.day}-${_months[date.month - 1]}';
+  final weekday = _weekdays[currentLanguage]![date.weekday - 1];
+  final month = _months[currentLanguage]![date.month - 1];
+  final day = currentLanguage == AppLanguage.ru ? '${date.day} $month' : '${date.day}-$month';
+  return '${weekday[0].toUpperCase()}${weekday.substring(1)}, $day';
 }

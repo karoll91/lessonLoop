@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
@@ -44,14 +45,14 @@ class _QuestionsScreenState extends ConsumerState<QuestionsScreen> {
     final subjects = ref.watch(_subjectsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Savollar')),
+      appBar: AppBar(title: Text(tr('Savollar'))),
       body: subjects.when(
         loading: () => const Loading(),
         error: (error, _) => ErrorView(error: error, onRetry: () => ref.invalidate(coursesProvider)),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(
-              child: EmptyState(icon: Icons.quiz_outlined, title: "Fan yo'q", text: 'Sizga fan biriktirilgach savollar shu yerda chiqadi.'),
+            return Center(
+              child: EmptyState(icon: Icons.quiz_outlined, title: tr("Fan yo'q"), text: tr('Sizga fan biriktirilgach savollar shu yerda chiqadi.')),
             );
           }
           final subjectId = _subjectId ?? list.first.$1;
@@ -64,7 +65,7 @@ class _QuestionsScreenState extends ConsumerState<QuestionsScreen> {
             floatingActionButton: topicList.isEmpty
                 ? null
                 : FloatingActionButton(
-                    tooltip: 'Yangi savol',
+                    tooltip: tr('Yangi savol'),
                     onPressed: () async {
                       final saved = await Navigator.push<bool>(
                         context,
@@ -91,7 +92,7 @@ class _QuestionsScreenState extends ConsumerState<QuestionsScreen> {
                           child: DropdownButtonFormField<int>(
                             initialValue: subjectId,
                             isExpanded: true,
-                            decoration: const InputDecoration(labelText: 'Fan'),
+                            decoration: InputDecoration(labelText: tr('Fan')),
                             items: [for (final (id, name) in list) DropdownMenuItem(value: id, child: Text(name))],
                             onChanged: (id) => setState(() {
                               _subjectId = id;
@@ -101,14 +102,14 @@ class _QuestionsScreenState extends ConsumerState<QuestionsScreen> {
                         ),
                       TextField(
                         onChanged: (value) => setState(() => _search = value.trim()),
-                        decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Savol matni'),
+                        decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: tr('Savol matni')),
                       ),
                       const SizedBox(height: 8),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
-                            ChoiceChip(label: const Text('Barchasi'), selected: _topicId == null, onSelected: (_) => setState(() => _topicId = null)),
+                            ChoiceChip(label: Text(tr('Barchasi')), selected: _topicId == null, onSelected: (_) => setState(() => _topicId = null)),
                             for (final topic in topicList) ...[
                               const SizedBox(width: 8),
                               ChoiceChip(
@@ -129,16 +130,16 @@ class _QuestionsScreenState extends ConsumerState<QuestionsScreen> {
                     error: (error, _) => ErrorView(error: error, onRetry: () => ref.invalidate(_questionsProvider(query))),
                     data: (items) {
                       if (topicList.isEmpty && topics.hasValue) {
-                        return const Center(
-                          child: EmptyState(icon: Icons.topic_outlined, title: "Fanda mavzu yo'q", text: "Mavzularni web panelda qo'shing."),
+                        return Center(
+                          child: EmptyState(icon: Icons.topic_outlined, title: tr("Fanda mavzu yo'q"), text: tr("Mavzularni web panelda qo'shing.")),
                         );
                       }
                       if (items.isEmpty) {
                         return Center(
                           child: EmptyState(
                             icon: _search.isEmpty ? Icons.quiz_outlined : Icons.search_off,
-                            title: _search.isEmpty ? "Hali savol yo'q" : '«$_search» topilmadi',
-                            text: _search.isEmpty ? "Pastdagi + tugmasi bilan qo'shing yoki web panelda Excel'dan import qiling." : null,
+                            title: _search.isEmpty ? tr("Hali savol yo'q") : tr('«{q}» topilmadi', {'q': _search}),
+                            text: _search.isEmpty ? tr("Pastdagi + tugmasi bilan qo'shing yoki web panelda Excel'dan import qiling.") : null,
                           ),
                         );
                       }
@@ -189,10 +190,10 @@ class _QuestionCard extends StatelessWidget {
                 spacing: 6,
                 runSpacing: 6,
                 children: [
-                  if (topic != null) Chip2('${topic.position}-mavzu'),
-                  Chip2(question.isTest ? 'Test' : 'Ochiq', tone: question.isTest ? Tone.info : Tone.neutral),
-                  Chip2(difficultyLabels[question.difficulty] ?? ''),
-                  if (!question.hasAnswer) const Chip2('Javobsiz', tone: Tone.warn),
+                  if (topic != null) Chip2(tr('{n}-mavzu', {'n': topic.position})),
+                  Chip2(question.isTest ? tr('Test') : tr('Ochiq'), tone: question.isTest ? Tone.info : Tone.neutral),
+                  Chip2(tr(difficultyLabels[question.difficulty] ?? '')),
+                  if (!question.hasAnswer) Chip2(tr('Javobsiz'), tone: Tone.warn),
                 ],
               ),
               const SizedBox(height: 8),
@@ -200,10 +201,10 @@ class _QuestionCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Text("${question.timesAsked ?? 0} marta so'ralgan", style: Theme.of(context).textTheme.bodySmall),
+                  Text(tr("{n} marta so'ralgan", {'n': question.timesAsked ?? 0}), style: Theme.of(context).textTheme.bodySmall),
                   const Spacer(),
                   if (question.averageScore != null) ...[
-                    Text("o'rtacha ", style: Theme.of(context).textTheme.bodySmall),
+                    Text(tr("o'rtacha "), style: Theme.of(context).textTheme.bodySmall),
                     ScoreText(question.averageScore, size: 13),
                   ],
                 ],
@@ -252,7 +253,7 @@ class _QuestionDetail extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      question.isTest ? 'Izoh' : "To'g'ri javob",
+                      question.isTest ? tr('Izoh') : tr("To'g'ri javob"),
                       style: TextStyle(color: c.pass, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 4),
@@ -261,16 +262,16 @@ class _QuestionDetail extends StatelessWidget {
                 ),
               )
             else if (!question.isTest)
-              const Banner2('Namuna javob kiritilmagan — darsda doskada ko\'rsatib bo\'lmaydi.', tone: Tone.warn),
+              Banner2(tr('Namuna javob kiritilmagan — darsda doskada ko\'rsatib bo\'lmaydi.'), tone: Tone.warn),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: Kpi(label: "So'ralgan", value: '${question.timesAsked ?? 0}'),
+                  child: Kpi(label: tr("So'ralgan"), value: '${question.timesAsked ?? 0}'),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Kpi(label: "O'rtacha ball", value: question.averageScore?.toString() ?? '—', color: c.score(question.averageScore)),
+                  child: Kpi(label: tr("O'rtacha ball"), value: question.averageScore?.toString() ?? '—', color: c.score(question.averageScore)),
                 ),
               ],
             ),
@@ -332,7 +333,7 @@ class _QuestionFormScreenState extends ConsumerState<QuestionFormScreen> {
           ],
       });
       if (mounted) {
-        showMessage(context, "Savol qo'shildi");
+        showMessage(context, tr("Savol qo'shildi"));
         Navigator.pop(context, true);
       }
     } on ApiException catch (error) {
@@ -347,27 +348,27 @@ class _QuestionFormScreenState extends ConsumerState<QuestionFormScreen> {
   @override
   Widget build(BuildContext context) {
     final optionsError =
-        _error?.fieldError('options') ?? (_error?.errors.keys.any((key) => key.startsWith('options.')) == true ? "Kamida 2 ta variantni to'ldiring" : null);
+        _error?.fieldError('options') ?? (_error?.errors.keys.any((key) => key.startsWith('options.')) == true ? tr("Kamida 2 ta variantni to'ldiring") : null);
     final known = ['text', 'answer_text', 'options', 'type', 'difficulty'];
     final otherError = _error != null && !known.any((key) => _error!.fieldError(key) != null) && optionsError == null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Yangi savol')),
+      appBar: AppBar(title: Text(tr('Yangi savol'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           DropdownButtonFormField<int>(
             initialValue: _topicId,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Mavzu'),
+            decoration: InputDecoration(labelText: tr('Mavzu')),
             items: [for (final topic in widget.topics) DropdownMenuItem(value: topic.id, child: Text('${topic.position}. ${topic.title}'))],
             onChanged: (id) => setState(() => _topicId = id!),
           ),
           const SizedBox(height: 14),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'open', label: Text('Ochiq')),
-              ButtonSegment(value: 'test', label: Text('Test (A–D)')),
+            segments: [
+              ButtonSegment(value: 'open', label: Text(tr('Ochiq'))),
+              ButtonSegment(value: 'test', label: Text(tr('Test (A–D)'))),
             ],
             selected: {_type},
             showSelectedIcon: false,
@@ -375,7 +376,7 @@ class _QuestionFormScreenState extends ConsumerState<QuestionFormScreen> {
           ),
           const SizedBox(height: 10),
           SegmentedButton<String>(
-            segments: [for (final entry in difficultyLabels.entries) ButtonSegment(value: entry.key, label: Text(entry.value))],
+            segments: [for (final entry in difficultyLabels.entries) ButtonSegment(value: entry.key, label: Text(tr(entry.value)))],
             selected: {_difficulty},
             showSelectedIcon: false,
             onSelectionChanged: (value) => setState(() => _difficulty = value.first),
@@ -386,11 +387,11 @@ class _QuestionFormScreenState extends ConsumerState<QuestionFormScreen> {
             minLines: 2,
             maxLines: 5,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: 'Savol matni *', errorText: _error?.fieldError('text')),
+            decoration: InputDecoration(labelText: tr('Savol matni *'), errorText: _error?.fieldError('text')),
           ),
           if (_type == 'test') ...[
             const SizedBox(height: 14),
-            Text("Variantlar — to'g'risini belgilang", style: Theme.of(context).textTheme.titleSmall),
+            Text(tr("Variantlar — to'g'risini belgilang"), style: Theme.of(context).textTheme.titleSmall),
             RadioGroup<int>(
               groupValue: _correct,
               onChanged: (value) => setState(() => _correct = value ?? 0),
@@ -405,7 +406,7 @@ class _QuestionFormScreenState extends ConsumerState<QuestionFormScreen> {
                           Expanded(
                             child: TextField(
                               controller: _options[index],
-                              decoration: InputDecoration(labelText: '${['A', 'B', 'C', 'D'][index]} varianti', hintText: index < 2 ? 'Majburiy' : 'Ixtiyoriy'),
+                              decoration: InputDecoration(labelText: tr('{l} varianti', {'l': ['A', 'B', 'C', 'D'][index]}), hintText: index < 2 ? tr('Majburiy') : tr('Ixtiyoriy')),
                             ),
                           ),
                         ],
@@ -426,14 +427,14 @@ class _QuestionFormScreenState extends ConsumerState<QuestionFormScreen> {
             minLines: 2,
             maxLines: 6,
             decoration: InputDecoration(
-              labelText: _type == 'test' ? 'Izoh (ixtiyoriy)' : "To'g'ri javob",
-              helperText: _type == 'open' ? "Darsda «Javobni ko'rsatish»da chiqadi" : null,
+              labelText: _type == 'test' ? tr('Izoh (ixtiyoriy)') : tr("To'g'ri javob"),
+              helperText: _type == 'open' ? tr("Darsda «Javobni ko'rsatish»da chiqadi") : null,
               errorText: _error?.fieldError('answer_text'),
             ),
           ),
           if (otherError) ...[const SizedBox(height: 12), Banner2(_error!.userMessage, tone: Tone.danger)],
           const SizedBox(height: 20),
-          FilledButton(onPressed: _busy || _text.text.trim().isEmpty ? null : _save, child: Text(_busy ? 'Saqlanmoqda…' : 'Saqlash')),
+          FilledButton(onPressed: _busy || _text.text.trim().isEmpty ? null : _save, child: Text(_busy ? tr('Saqlanmoqda…') : tr('Saqlash'))),
         ],
       ),
     );

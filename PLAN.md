@@ -128,7 +128,7 @@ Mobil ilovani brauzerda sinash: `cd mobile && /d/flutter/bin/flutter build web`,
 - ~~Offline baholash va sinxron~~ — Faza 5b'da qilindi.
 - ~~Telefon doska ulanishini xotirada saqlaydi~~ va ~~heartbeat / «Pult uzildi» yo'q~~ — Faza 5b'da qilindi.
 - Android APK yig'ilmagan (Android SDK yo'q); kamera bilan QR faqat haqiqiy telefonda tekshiriladi.
-- Til tanlash (kirill, rus) va Manrope shrifti qo'shilmagan — hozircha lotin o'zbek va tizim shrifti.
+- ~~Til tanlash (kirill, rus) va Manrope shrifti qo'shilmagan~~ — Faza 5b'da qilindi.
 
 ## Keyingi reja
 
@@ -151,7 +151,14 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
   - Cheklov: random (keyingi talaba), qayta tanlash va darsni yakunlash serversiz ishlamaydi — ulardan oldin saqlangan baholar yuborilishi shart. Offline baholanganda doska yangilanmaydi.
   - Chiqishda yuborilmagan baholar bo'lsa ogohlantiriladi.
   - Testlar: +6 backend (139 ta, 480 tekshiruv), +5 Flutter (22 ta). Haqiqiy telefonda internetni o'chirib sinash qoldi.
-- [ ] Kirill va rus tillari, Manrope shrifti.
+- [x] Kirill va rus tillari, Manrope shrifti.
+  - Mobil ilovada til: O'zbekcha (lotin) · Ўзбекча (кирилл) · Русский — onboardingda va Sozlamalar → Til'da, darhol almashadi va telefonda saqlanadi.
+  - Matnlar kodda o'zbek lotinida qoladi (`tr('...', {'n': 3})`); kirill — rasmiy alifbo bo'yicha avtomatik transliteratsiya (`toCyrillic`: oʻ→ў, gʻ→ғ, sh/ch, ye/yo/yu/ya, so'z boshidagi e→э, tutuq belgisi→ъ; QR, Wi-Fi, LessonLoop, havolalar va `{o'rinlar}` o'zgarmaydi), rus — `lib/core/strings_ru.dart` lug'ati (296 ta matn, server xabarlari ham). Talaba ismlari va savol matnlari kiritilganidek ko'rsatiladi.
+  - Test har bir `tr()` matnining rus tarjimasi borligini tekshiradi — yangi matn qo'shilsa tarjimasi ham qo'shilishi shart.
+  - Server xabarlari (o'zbekcha) kirillga o'giriladi va rus lug'atidan olinadi; Laravel'ning inglizcha validatsiya xabarlari o'zgarishsiz qoladi (backend locale `en`).
+  - Manrope (OFL, variable) `mobile/assets/fonts`'da; lotin va kirillni qamraydi. Uzun ruscha yozuvlar uchun pastki menyu 11 px, mavzu tanlagichdan ikonlar olindi, bosh sahifadagi doska tugmasi ikonga aylantirildi.
+  - Testlar: +5 Flutter (27 ta). Brauzerda (mobile-web, 375 px) uchala tilda tekshirildi.
+  - Ochiq: admin panel va doska faqat o'zbek lotinida; backend validatsiya xabarlari inglizcha (o'zbekcha `lang/uz` qo'shish mumkin).
 
 ### Faza 6 — Ishga tushirish
 - [ ] OpenServer domenlari: `api.lessonloop.loc`, `board.lessonloop.loc`, `admin.lessonloop.loc`.

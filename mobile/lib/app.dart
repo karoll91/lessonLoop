@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/api.dart';
+import 'core/i18n.dart';
 import 'core/outbox.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
@@ -19,6 +20,9 @@ class LessonLoopApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(settingsProvider.select((settings) => settings.themeMode));
+    ref.watch(languageProvider);
+    // Texts are read while widgets build, so a new language redraws everything.
+    ref.listen(languageProvider, (_, _) => rebuildAll(context));
     return MaterialApp(
       title: 'LessonLoop',
       debugShowCheckedModeBanner: false,
@@ -80,12 +84,12 @@ class OfflineStart extends ConsumerWidget {
         children: [
           EmptyState(
             icon: Icons.wifi_off,
-            title: "Serverga ulanib bo'lmadi",
-            text: "Internet va server manzilini tekshiring:\n${ref.watch(settingsProvider).serverUrl}",
-            action: 'Qayta urinish',
+            title: tr("Serverga ulanib bo'lmadi"),
+            text: tr("Internet va server manzilini tekshiring:\n{url}", {'url': ref.watch(settingsProvider).serverUrl}),
+            action: tr('Qayta urinish'),
             onAction: () => ref.invalidate(authProvider),
           ),
-          TextButton(onPressed: () => showServerDialog(context, ref), child: const Text("Server manzilini o'zgartirish")),
+          TextButton(onPressed: () => showServerDialog(context, ref), child: Text(tr("Server manzilini o'zgartirish"))),
         ],
       ),
     );
@@ -112,12 +116,12 @@ class _HomeShellState extends State<HomeShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: 'Bugun'),
-          NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups), label: 'Guruhlar'),
-          NavigationDestination(icon: Icon(Icons.quiz_outlined), selectedIcon: Icon(Icons.quiz), label: 'Savollar'),
-          NavigationDestination(icon: Icon(Icons.history), label: 'Tarix'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Sozlamalar'),
+        destinations: [
+          NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: tr('Bugun')),
+          NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups), label: tr('Guruhlar')),
+          NavigationDestination(icon: Icon(Icons.quiz_outlined), selectedIcon: Icon(Icons.quiz), label: tr('Savollar')),
+          NavigationDestination(icon: Icon(Icons.history), label: tr('Tarix')),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: tr('Sozlamalar')),
         ],
       ),
     );

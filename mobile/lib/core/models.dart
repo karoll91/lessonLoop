@@ -1,6 +1,8 @@
 /// Shapes of the backend API resources (backend/app/Http/Resources).
 library;
 
+import 'i18n.dart';
+
 typedef Json = Map<String, dynamic>;
 
 List<T> _list<T>(Object? raw, T Function(Json) parse) => raw is List ? raw.whereType<Json>().map(parse).toList() : <T>[];
@@ -92,10 +94,12 @@ enum QueueState {
   debtor('debtor', 'Qarzdor'),
   resting('resting', 'Dam olmoqda');
 
-  const QueueState(this.value, this.label);
+  const QueueState(this.value, this._label);
 
   final String value;
-  final String label;
+  final String _label;
+
+  String get label => tr(_label);
 
   static QueueState parse(String? value) => QueueState.values.firstWhere((state) => state.value == value, orElse: () => QueueState.queue);
 }

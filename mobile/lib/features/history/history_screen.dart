@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
@@ -36,7 +37,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final lessons = ref.watch(_lessonsProvider(_courseId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Darslar tarixi')),
+      appBar: AppBar(title: Text(tr('Darslar tarixi'))),
       body: Column(
         children: [
           if (courses.length > 1)
@@ -46,7 +47,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  ChoiceChip(label: const Text('Hammasi'), selected: _courseId == null, onSelected: (_) => setState(() => _courseId = null)),
+                  ChoiceChip(label: Text(tr('Hammasi')), selected: _courseId == null, onSelected: (_) => setState(() => _courseId = null)),
                   for (final course in courses) ...[
                     const SizedBox(width: 8),
                     ChoiceChip(label: Text(course.label), selected: _courseId == course.id, onSelected: (_) => setState(() => _courseId = course.id)),
@@ -63,8 +64,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   return Center(
                     child: EmptyState(
                       icon: Icons.history,
-                      title: _courseId == null ? "Hali dars o'tilmagan" : "Bu kurs bo'yicha dars yo'q",
-                      text: _courseId == null ? 'Birinchi darsni «Bugun» bo\'limidan boshlang.' : null,
+                      title: _courseId == null ? tr("Hali dars o'tilmagan") : tr("Bu kurs bo'yicha dars yo'q"),
+                      text: _courseId == null ? tr('Birinchi darsni «Bugun» bo\'limidan boshlang.') : null,
                     ),
                   );
                 }
@@ -81,9 +82,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           title: Text('${lesson.group} · ${lesson.subject}', style: const TextStyle(fontWeight: FontWeight.w700)),
                           subtitle: Text(
-                            '${formatDate(lesson.startedAt)} · ${lesson.sequence}-dars · ${lesson.askedCount ?? 0} / ${lesson.questionCount} savol',
+                            '${formatDate(lesson.startedAt)} · ${tr('{n}-dars', {'n': lesson.sequence})} · ${tr('{a} / {b} savol', {'a': lesson.askedCount ?? 0, 'b': lesson.questionCount})}',
                           ),
-                          trailing: lesson.isFinished ? ScoreText(lesson.averageScore, size: 20) : const Chip2('Faol', tone: Tone.accent),
+                          trailing: lesson.isFinished ? ScoreText(lesson.averageScore, size: 20) : Chip2(tr('Faol'), tone: Tone.accent),
                           onTap: () async {
                             await Navigator.push(
                               context,
@@ -120,7 +121,7 @@ class LessonDetailScreen extends ConsumerWidget {
     final now = DateTime.now();
 
     return Scaffold(
-      appBar: AppBar(title: Text(lesson.value == null ? 'Dars' : '${lesson.value!.group} · ${lesson.value!.sequence}-dars')),
+      appBar: AppBar(title: Text(lesson.value == null ? tr('Dars') : '${lesson.value!.group} · ${tr('{n}-dars', {'n': lesson.value!.sequence})}')),
       body: lesson.when(
         loading: () => const Loading(),
         error: (error, _) => ErrorView(error: error, onRetry: () => ref.invalidate(_lessonProvider(lessonId))),
@@ -135,12 +136,12 @@ class LessonDetailScreen extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: Kpi(label: 'Savollar', value: '${data.scored.length} / ${data.questionCount}'),
+                  child: Kpi(label: tr('Savollar'), value: '${data.scored.length} / ${data.questionCount}'),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Kpi(
-                    label: "O'rtacha",
+                    label: tr("O'rtacha"),
                     value: data.average?.toString() ?? '—',
                     color: context.colors.score(data.average, passScore: passScore),
                   ),
@@ -149,8 +150,8 @@ class LessonDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             if (data.answers.isEmpty)
-              const Card(
-                child: EmptyState(icon: Icons.inbox_outlined, title: "Bu darsda hech kim so'ralmagan"),
+              Card(
+                child: EmptyState(icon: Icons.inbox_outlined, title: tr("Bu darsda hech kim so'ralmagan")),
               )
             else
               Section(
@@ -159,7 +160,7 @@ class LessonDetailScreen extends ConsumerWidget {
                     ListTile(
                       title: Text(answer.studentName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                       subtitle: Text(
-                        '${answer.question?.text ?? ''}\n${answerStatusLabels[answer.status]}${answer.edits.isEmpty ? '' : ' · ${answer.edits.length} marta tuzatilgan'}',
+                        '${answer.question?.text ?? ''}\n${tr(answerStatusLabels[answer.status] ?? '')}${answer.edits.isEmpty ? '' : ' · ${tr('{n} marta tuzatilgan', {'n': answer.edits.length})}'}',
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -219,7 +220,7 @@ class _RegradeSheetState extends ConsumerState<RegradeSheet> {
     try {
       await ref.read(apiProvider).patch('/answers/${widget.answer.id}', {'score': int.parse(_score.text), 'reason': _reason.text.trim()});
       if (mounted) {
-        showMessage(context, 'Baho tuzatildi');
+        showMessage(context, tr('Baho tuzatildi'));
         Navigator.pop(context, true);
       }
     } on ApiException catch (error) {
@@ -248,7 +249,7 @@ class _RegradeSheetState extends ConsumerState<RegradeSheet> {
           Text(answer.question?.text ?? '', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 12),
           if (answer.edits.isNotEmpty) ...[
-            Text('Tuzatishlar tarixi', style: Theme.of(context).textTheme.titleSmall),
+            Text(tr('Tuzatishlar tarixi'), style: Theme.of(context).textTheme.titleSmall),
             for (final edit in answer.edits)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -260,9 +261,9 @@ class _RegradeSheetState extends ConsumerState<RegradeSheet> {
             const SizedBox(height: 12),
           ],
           if (!widget.editable)
-            const Banner2("Tuzatish muddati tugagan. Kerak bo'lsa admin bilan bog'laning.", tone: Tone.neutral, icon: Icons.lock_outline)
+            Banner2(tr("Tuzatish muddati tugagan. Kerak bo'lsa admin bilan bog'laning."), tone: Tone.neutral, icon: Icons.lock_outline)
           else ...[
-            Text('${formatDateTime(answer.editableUntil)} gacha tuzatish mumkin', style: Theme.of(context).textTheme.bodySmall),
+            Text(tr('{date} gacha tuzatish mumkin', {'date': formatDateTime(answer.editableUntil)}), style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 12),
             TextField(
               controller: _score,
@@ -270,19 +271,19 @@ class _RegradeSheetState extends ConsumerState<RegradeSheet> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                labelText: 'Yangi ball (0–100)',
-                errorText: _error?.fieldError('score') ?? (value != null && value > 100 ? '0 dan 100 gacha' : null),
+                labelText: tr('Yangi ball (0–100)'),
+                errorText: _error?.fieldError('score') ?? (value != null && value > 100 ? tr('0 dan 100 gacha') : null),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _reason,
               onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(labelText: 'Sabab *', hintText: "Javobni qayta ko'rib chiqdim", errorText: _error?.fieldError('reason')),
+              decoration: InputDecoration(labelText: tr('Sabab *'), hintText: tr("Javobni qayta ko'rib chiqdim"), errorText: _error?.fieldError('reason')),
             ),
             if (_error != null && _error!.errors.isEmpty) ...[const SizedBox(height: 12), Banner2(_error!.userMessage, tone: Tone.danger)],
             const SizedBox(height: 16),
-            FilledButton(onPressed: valid && !_busy ? _save : null, child: Text(_busy ? 'Saqlanmoqda…' : 'Saqlash')),
+            FilledButton(onPressed: valid && !_busy ? _save : null, child: Text(_busy ? tr('Saqlanmoqda…') : tr('Saqlash'))),
           ],
         ],
       ),

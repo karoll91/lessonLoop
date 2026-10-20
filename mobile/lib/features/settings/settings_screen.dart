@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/outbox.dart';
 import '../../core/providers.dart';
@@ -11,13 +12,14 @@ import '../auth/auth_screens.dart';
 import '../board/board_controller.dart';
 import '../board/pair_screen.dart';
 
-const _ruleLabels = {
-  'pass_score': ("O'tish bali", 'ball'),
-  'cooldown_lessons': ('Dam olish', 'dars'),
-  'debtor_weight': ('Qarzdor vazni', '×'),
-  'never_asked_weight': ("So'ralmagan vazni", '×'),
-  'default_question_count': ('Savollar soni', 'ta'),
-  'grade_edit_hours': ('Bahoni tuzatish muddati', 'soat'),
+/// Built on every use, so the labels follow the chosen language.
+Map<String, (String, String)> get _ruleLabels => {
+  'pass_score': (tr("O'tish bali"), tr('ball')),
+  'cooldown_lessons': (tr('Dam olish'), tr('dars')),
+  'debtor_weight': (tr('Qarzdor vazni'), '×'),
+  'never_asked_weight': (tr("So'ralmagan vazni"), '×'),
+  'default_question_count': (tr('Savollar soni'), tr('ta')),
+  'grade_edit_hours': (tr('Bahoni tuzatish muddati'), tr('soat')),
 };
 
 /// M13 — profile, appearance, random rules, server, sign out.
@@ -33,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
     final c = context.colors;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sozlamalar')),
+      appBar: AppBar(title: Text(tr('Sozlamalar'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
@@ -43,11 +45,16 @@ class SettingsScreen extends ConsumerWidget {
                 contentPadding: const EdgeInsets.all(14),
                 leading: Avatar(user.name, size: 48),
                 title: Text(user.name, style: Theme.of(context).textTheme.titleMedium),
-                subtitle: Text('${user.login} · ${user.isAdmin ? 'Admin' : "O'qituvchi"}'),
+                subtitle: Text('${user.login} · ${user.isAdmin ? tr('Admin') : tr("O'qituvchi")}'),
               ),
             ),
           const SizedBox(height: 20),
-          _title(context, "Ko'rinish"),
+          _title(context, tr('Til')),
+          const Card(
+            child: Padding(padding: EdgeInsets.all(14), child: LanguageSelector()),
+          ),
+          const SizedBox(height: 20),
+          _title(context, tr("Ko'rinish")),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -55,16 +62,16 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _title(context, 'Random qoidalari'),
+          _title(context, tr('Random qoidalari')),
           rules.when(
             loading: () => const Loading(),
-            error: (error, _) => Banner2(errorText(error), tone: Tone.danger, action: 'Qayta', onAction: () => ref.invalidate(rulesProvider)),
+            error: (error, _) => Banner2(errorText(error), tone: Tone.danger, action: tr('Qayta'), onAction: () => ref.invalidate(rulesProvider)),
             data: (data) => Section(
               children: [
                 for (final entry in _ruleLabels.entries)
                   ListTile(
                     title: Text(entry.value.$1),
-                    subtitle: data.values[entry.key] != data.defaults[entry.key] ? Text('Standart: ${data.defaults[entry.key]}') : null,
+                    subtitle: data.values[entry.key] != data.defaults[entry.key] ? Text(tr('Standart: {v}', {'v': data.defaults[entry.key]})) : null,
                     trailing: Text('${data.values[entry.key] ?? '—'} ${entry.value.$2}', style: const TextStyle(fontWeight: FontWeight.w800)),
                     onTap: user?.isAdmin == true ? () => _editRule(context, ref, data, entry.key) : null,
                   ),
@@ -74,39 +81,39 @@ class SettingsScreen extends ConsumerWidget {
           if (user?.isAdmin != true)
             Padding(
               padding: const EdgeInsets.only(top: 6, left: 4),
-              child: Text("Qoidalarni faqat admin o'zgartiradi.", style: Theme.of(context).textTheme.bodySmall),
+              child: Text(tr("Qoidalarni faqat admin o'zgartiradi."), style: Theme.of(context).textTheme.bodySmall),
             ),
           const SizedBox(height: 20),
-          _title(context, 'Ulanish'),
+          _title(context, tr('Ulanish')),
           Section(
             children: [
               ListTile(
                 leading: const Icon(Icons.dns_outlined),
-                title: const Text('Server manzili'),
+                title: Text(tr('Server manzili')),
                 subtitle: Text(settings.serverUrl),
                 onTap: () => showServerDialog(context, ref),
               ),
               ListTile(
                 leading: const Icon(Icons.cast_outlined),
-                title: const Text('Doska'),
-                subtitle: Text(board == null ? 'Ulanmagan' : (board.name ?? 'Doska #${board.boardId}')),
+                title: Text(tr('Doska')),
+                subtitle: Text(board == null ? tr('Ulanmagan') : (board.name ?? tr('Doska #{id}', {'id': board.boardId}))),
                 onTap: () => openPairing(context),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _title(context, 'Hisob'),
+          _title(context, tr('Hisob')),
           Section(
             children: [
               ListTile(
                 leading: const Icon(Icons.lock_outline),
-                title: const Text("Parolni o'zgartirish"),
+                title: Text(tr("Parolni o'zgartirish")),
                 onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ChangePasswordScreen())),
               ),
               ListTile(
                 leading: Icon(Icons.logout, color: c.danger),
                 title: Text(
-                  'Chiqish',
+                  tr('Chiqish'),
                   style: TextStyle(color: c.danger, fontWeight: FontWeight.w700),
                 ),
                 onTap: () async {
@@ -118,11 +125,11 @@ class SettingsScreen extends ConsumerWidget {
                   }
                   if (await confirm(
                     context,
-                    title: 'Chiqasizmi?',
+                    title: tr('Chiqasizmi?'),
                     text: unsent == 0
-                        ? "Telefondagi sessiya yopiladi. Baholar serverda saqlangan."
-                        : "Telefonda $unsent ta yuborilmagan baho bor (internet yo'q). Chiqsangiz ular o'chib ketadi.",
-                    action: 'Chiqish',
+                        ? tr("Telefondagi sessiya yopiladi. Baholar serverda saqlangan.")
+                        : tr("Telefonda {n} ta yuborilmagan baho bor (internet yo'q). Chiqsangiz ular o'chib ketadi.", {'n': unsent}),
+                    action: tr('Chiqish'),
                     danger: true,
                   )) {
                     await ref.read(boardProvider.notifier).release().catchError((_) {});
@@ -176,9 +183,9 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('$min – $max · standart ${rules.defaults[key]}', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+                Text(tr('{min} – {max} · standart {v}', {'min': min, 'max': max, 'v': rules.defaults[key]}), textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 16),
-                FilledButton(onPressed: () => Navigator.pop(context, value), child: const Text('Saqlash')),
+                FilledButton(onPressed: () => Navigator.pop(context, value), child: Text(tr('Saqlash'))),
               ],
             ),
           ),
@@ -192,7 +199,7 @@ class SettingsScreen extends ConsumerWidget {
       await ref.read(apiProvider).patch('/settings', {key: result});
       ref.invalidate(rulesProvider);
       if (context.mounted) {
-        showMessage(context, "Qoida o'zgartirildi. Keyingi tanlovdan boshlab amal qiladi.");
+        showMessage(context, tr("Qoida o'zgartirildi. Keyingi tanlovdan boshlab amal qiladi."));
       }
     } on ApiException catch (error) {
       if (context.mounted) {
