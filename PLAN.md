@@ -11,6 +11,8 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 | PRD (talablar, qoidalar R1–R8, ma'lumotlar modeli) | https://claude.ai/code/artifact/eac39d2d-2191-4bea-bf05-d9c4458e467d |
 | Design (UI Kit, Doska + pult D1–D10, Mobil M1–M13, Web W1–W12) | https://claude.ai/artifact/NbXN7yFxPtyDcBjCPDQMv8 |
 | Kod (GitHub, `main`) | https://github.com/karoll91/lessonLoop |
+| **Foydalanish qo'llanmasi** (o'rnatish, dars, admin, APK, zaxira, muammolar) | `QOLLANMA.md` |
+| API hujjati | `backend/public/docs` (`http://<IP>:8000/docs/`) |
 | Eski prototip | `Index.html` |
 | Backend | `backend/` (Laravel) |
 
