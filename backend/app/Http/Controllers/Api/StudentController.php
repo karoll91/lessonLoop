@@ -17,6 +17,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
+/**
+ * @group Guruhlar va talabalar
+ */
 class StudentController extends Controller
 {
     public function __construct(private QueueStatusResolver $queue) {}

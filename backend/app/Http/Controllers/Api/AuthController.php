@@ -12,8 +12,14 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @group Kirish
+ */
 class AuthController extends Controller
 {
+    /**
+     * @unauthenticated
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         $user = User::query()->where('login', $request->string('login'))->first();

@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Gate;
 /**
  * The classroom board (no login, identified by its secret token) and the
  * teacher phone that remote-controls it.
+ *
+ * @group Doska va pult
  */
 class BoardController extends Controller
 {
@@ -24,6 +26,8 @@ class BoardController extends Controller
 
     /**
      * A board browser tab opens a new session and gets its token and pair code.
+     *
+     * @unauthenticated
      */
     public function store(Request $request): JsonResponse
     {
@@ -40,6 +44,8 @@ class BoardController extends Controller
 
     /**
      * Current board state, used by the board after a reload or reconnect.
+     *
+     * @unauthenticated
      */
     public function state(string $token): JsonResponse
     {
@@ -49,6 +55,9 @@ class BoardController extends Controller
         return response()->json(['state' => $this->remote->state($board)]);
     }
 
+    /**
+     * @unauthenticated
+     */
     public function refreshPairCode(string $token): JsonResponse
     {
         $board = $this->remote->refreshPairCode($this->findByToken($token));

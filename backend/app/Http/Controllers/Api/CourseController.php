@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * A course binds a subject to a study group and a teacher.
+ *
+ * @group Kurslar
  */
 class CourseController extends Controller
 {

@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * POST /sync — the phone sends the grades and skips it queued while offline.
+ *
+ * @group Darslar
  */
 class SyncController extends Controller
 {

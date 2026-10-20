@@ -8,6 +8,9 @@ use App\Services\ReportBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Jurnal va hisobotlar
+ */
 class ReportController extends Controller
 {
     public function __construct(private ReportBuilder $builder) {}

@@ -58,8 +58,10 @@ http {
             }
         }
 
+        # API, plus the API docs (backend/public/docs, php artisan scribe:generate).
         location / {
-            try_files $uri /index.php?$query_string;
+            index index.html;
+            try_files $uri $uri/ /index.php?$query_string;
         }
 
         location ~ \.php$ {

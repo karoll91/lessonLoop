@@ -55,11 +55,11 @@ class SaveTopicRequest extends FormRequest
         return $this->route('topic');
     }
 
-    private function subjectId(): int
+    private function subjectId(): ?int
     {
         /** @var Subject|null $subject */
         $subject = $this->route('subject');
 
-        return $subject?->id ?? $this->topic()->subject_id;
+        return $subject?->id ?? $this->topic()?->subject_id;
     }
 }

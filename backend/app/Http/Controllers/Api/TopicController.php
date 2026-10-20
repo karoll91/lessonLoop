@@ -16,6 +16,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Fanlar va mavzular
+ */
 class TopicController extends Controller
 {
     public function index(Subject $subject): AnonymousResourceCollection

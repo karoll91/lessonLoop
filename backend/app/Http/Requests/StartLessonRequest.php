@@ -24,14 +24,16 @@ class StartLessonRequest extends FormRequest
      */
     public function rules(): array
     {
-        $course = $this->course();
+        // Nullable only for tools that read rules() without a route (API docs).
+        /** @var Course|null $course */
+        $course = $this->route('course');
 
         return [
             'topic_ids' => ['required', 'array', 'min:1'],
-            'topic_ids.*' => ['integer', 'distinct', Rule::exists('topics', 'id')->where('subject_id', $course->subject_id)],
+            'topic_ids.*' => ['integer', 'distinct', Rule::exists('topics', 'id')->where('subject_id', $course?->subject_id)],
             'question_count' => ['required', 'integer', 'min:1', 'max:100'],
             'absent_student_ids' => ['sometimes', 'array'],
-            'absent_student_ids.*' => ['integer', Rule::exists('students', 'id')->where('study_group_id', $course->study_group_id)],
+            'absent_student_ids.*' => ['integer', Rule::exists('students', 'id')->where('study_group_id', $course?->study_group_id)],
         ];
     }
 

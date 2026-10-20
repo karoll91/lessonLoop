@@ -16,6 +16,9 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
+/**
+ * @group Darslar
+ */
 class LessonController extends Controller
 {
     public function __construct(private LessonRunner $runner) {}

@@ -14,6 +14,9 @@ use Maatwebsite\Excel\Excel as ExcelType;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ * @group Jurnal va hisobotlar
+ */
 class JournalController extends Controller
 {
     public function __construct(private JournalBuilder $builder) {}

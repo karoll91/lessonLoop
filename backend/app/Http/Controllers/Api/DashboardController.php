@@ -7,6 +7,9 @@ use App\Services\DashboardBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @group Bosh sahifa
+ */
 class DashboardController extends Controller
 {
     public function __invoke(Request $request, DashboardBuilder $builder): JsonResponse

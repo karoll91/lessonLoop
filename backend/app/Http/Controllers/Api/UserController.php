@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 /**
  * Teacher and admin accounts (W10). Accounts are created by an admin; when no
  * password is given a temporary one is returned once and must be changed.
+ *
+ * @group Foydalanuvchilar
  */
 class UserController extends Controller
 {

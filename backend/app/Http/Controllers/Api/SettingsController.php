@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 /**
  * Random queue rules (W11, M13). Everyone reads them; only admins change them.
  * Changes apply to lessons drawn from now on.
+ *
+ * @group Sozlamalar
  */
 class SettingsController extends Controller
 {

@@ -27,7 +27,7 @@ class ReorderTopicsRequest extends FormRequest
     {
         return [
             'topic_ids' => ['required', 'array', 'min:1'],
-            'topic_ids.*' => ['integer', 'distinct', Rule::exists('topics', 'id')->where('subject_id', $this->subject()->id)],
+            'topic_ids.*' => ['integer', 'distinct', Rule::exists('topics', 'id')->where('subject_id', $this->route('subject')?->id)],
         ];
     }
 

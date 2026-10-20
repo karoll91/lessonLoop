@@ -18,6 +18,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Savollar
+ */
 class QuestionController extends Controller
 {
     public function index(Request $request, Topic $topic): AnonymousResourceCollection

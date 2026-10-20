@@ -15,6 +15,9 @@ use App\Services\OfflineSync;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Darslar
+ */
 class AnswerController extends Controller
 {
     public function __construct(private LessonRunner $runner, private OfflineSync $sync) {}

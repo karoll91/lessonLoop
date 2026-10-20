@@ -172,7 +172,10 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
   - OpenServer'dagi `mysqldump.exe` faylni yozib bo'lishidan oldin qaytadi — buyruq fayl hajmi barqaror bo'lguncha kutadi.
   - `deploy/env.production.example` — `backend/.env`'da o'zgartiriladigan qiymatlar (APP_ENV=production, APP_DEBUG=false, APP_URL, LOG_LEVEL, MySQL paroli).
   - Testlar: +3 backend (142 ta, 491 tekshiruv).
-- [ ] API hujjati (OpenAPI yoki Scribe).
+- [x] API hujjati (OpenAPI yoki Scribe).
+  - Scribe (`require-dev`): `backend/public/docs` — HTML (`http://<IP>:8000/docs/`), `openapi.yaml`, Postman `collection.json`; 74 ta operatsiya, o'zbekcha guruhlar, Bearer token, login talab qilmaydigan doska endpointlari belgilangan.
+  - Yangilash: `DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan scribe:generate` (response calls o'chirilgan — haqiqiy bazaga tegmaydi).
+  - Hujjat uchun 3 ta FormRequest `rules()` marshrut modeli bo'lmasa ham ishlaydigan qilindi (real so'rovlarda o'zgarish yo'q).
 
 ## PRD'dagi javobsiz savollar
 

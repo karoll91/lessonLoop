@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 /**
  * Bulk import of students and questions. With dry_run=1 nothing is saved and
  * the response is a preview of what would be created, skipped and rejected.
+ *
+ * @group Import
  */
 class ImportController extends Controller
 {
