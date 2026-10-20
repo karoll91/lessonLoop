@@ -1,8 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The API runs on the teacher's computer in the local network. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Scanning the board's QR code. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
+    <!-- usesCleartextTraffic: the classroom server is plain http://192.168.x.x:8000. -->
     <application
-        android:label="lessonloop"
+        android:label="LessonLoop"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
