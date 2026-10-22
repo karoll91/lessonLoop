@@ -13,15 +13,13 @@ class LogoMark extends StatelessWidget {
 
   final double size;
 
+  /// Built from mobile/assets/icon by deploy/make-icons.php.
+  static const asset = 'assets/images/logo.png';
+
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: c.accent, borderRadius: BorderRadius.circular(size * 0.29)),
-      child: Icon(Icons.repeat_rounded, color: c.onAccent, size: size * 0.52),
-    );
+    final pixels = (size * MediaQuery.devicePixelRatioOf(context)).round();
+    return Image.asset(asset, width: size, height: size, cacheWidth: pixels, filterQuality: FilterQuality.medium, semanticLabel: 'LessonLoop');
   }
 }
 

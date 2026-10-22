@@ -362,5 +362,6 @@ npm --prefix admin test
 cd mobile && D:\flutter\bin\flutter.bat test
 ```
 
+- **Logo:** manba rasmlar `mobile\assets\icon\` da (1024×1024 PNG: `icon.png`, `icon_rounded.png`, `icon_foreground.png`, `icon_background.png`). Logoni almashtirgach `G:\OSPanel\modules\PHP-8.3\php.exe deploy\make-icons.php` hamma joy uchun o'lchamlarni yaratadi (mobil ilova ichidagi logo, Android/iOS/Windows ikonalari, web, admin va doska logosi va favicon), keyin `deploy\build.bat` va APK qayta yig'iladi.
 - Mobil ilovaga yangi matn qo'shilganda `tr('...')` ichida o'zbek lotinida yoziladi; kirill avtomatik, rus tarjimasi `mobile\lib\core\strings_ru.dart` ga qo'shiladi (test tarjimasiz matnni ushlaydi).
 - Server konfiguratsiyasi keshlanmaydi: aks holda `php artisan test` haqiqiy bazani tozalab yuborishi mumkin edi. `php artisan config:cache` **ishlatmang**.

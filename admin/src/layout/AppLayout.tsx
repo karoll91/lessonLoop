@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../auth'
 import { ErrorState } from '../ui/components'
-import { LockIcon, LogoutIcon, LoopIcon, MoonIcon, SunIcon } from '../ui/icons'
+import { LockIcon, LogoutIcon, MoonIcon, SunIcon } from '../ui/icons'
+import { Logo } from '../ui/Logo'
 import { useTheme, type Theme } from './theme'
 
 const BOARD_URL =
@@ -59,9 +60,7 @@ export function AppLayout() {
     <div className="app">
       <nav className="sidebar" aria-label="Asosiy menyu">
         <div className="brand">
-          <span className="brand-mark">
-            <LoopIcon />
-          </span>
+          <Logo className="brand-mark" />
           LessonLoop
         </div>
         {links

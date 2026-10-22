@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Theme } from '../hooks'
 import type { BoardState, ConnectionStatus } from '../types'
-import { ExpandIcon, LoopIcon, MoonIcon, SunIcon } from './icons'
+import { ExpandIcon, MoonIcon, SunIcon } from './icons'
 
 interface ShellProps {
   state: BoardState
@@ -32,9 +32,7 @@ export function Shell({ state, connection, remoteLost = false, theme, onToggleTh
           </>
         ) : (
           <>
-            <span className="logo">
-              <LoopIcon />
-            </span>
+            <img className="logo" src={`${import.meta.env.BASE_URL}logo.png`} alt="LessonLoop" />
             <span className="top-title">LessonLoop · Doska rejimi</span>
             <span className="grow" />
           </>

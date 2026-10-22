@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth'
 import { errorMessage, Field, fieldError } from '../ui/components'
-import { LoopIcon } from '../ui/icons'
+import { Logo } from '../ui/Logo'
 
 /** W1 — sign in with the login and password the admin gave. */
 export function LoginPage() {
@@ -40,9 +40,7 @@ export function LoginPage() {
         style={{ flex: '1 1 420px', background: 'var(--accent)', color: 'var(--on-accent)', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 32 }}
       >
         <div className="row" style={{ gap: 12, fontSize: 20, fontWeight: 800 }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--on-accent)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <LoopIcon />
-          </span>
+          <Logo size={40} />
           LessonLoop
         </div>
         <div className="col" style={{ gap: 16 }}>
