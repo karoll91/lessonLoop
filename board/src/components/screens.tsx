@@ -51,7 +51,7 @@ export function LobbyScreen({ lesson }: { lesson?: BoardLesson }) {
       <main className="main center">
         <span className="chip pass">Pult ulandi</span>
         <div className="big-title">Dars tanlanishini kuting</div>
-        <span className="hint">O'qituvchi telefonda darsni tanlaydi</span>
+        <span className="hint">O'qituvchi darsni telefonda yoki shu doskada tanlaydi</span>
       </main>
     )
   }
