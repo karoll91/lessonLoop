@@ -36,13 +36,15 @@ export interface UseBoard {
 /**
  * Keeps the board in sync with the backend: restores or opens a board
  * session, listens on board.{token}, re-reads the state after reconnects and
- * renews an expired pairing code. Also tracks the phone's heartbeats.
+ * renews an expired pairing code. Also tracks the phone's heartbeats. While
+ * the WebSocket is down it asks for the state every few seconds instead.
  */
 export function useBoard(): UseBoard {
   const [state, setBoardState] = useState<BoardState | null>(null)
   const [seenAt, setSeenAt] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [connection, setConnection] = useState<ConnectionStatus>('connecting')
+  const [socket, setSocket] = useState<ConnectionStatus>('connecting')
+  const [serverOk, setServerOk] = useState(true)
   const [attempt, setAttempt] = useState(0)
   const tokenRef = useRef<string | null>(null)
 
@@ -58,6 +60,7 @@ export function useBoard(): UseBoard {
     let echo: BoardEcho | null = null
     let stopConnectionWatch: (() => void) | null = null
     let poll: number | undefined
+    let live = false
     let retryTimer: number | undefined
 
     const resync = async (): Promise<void> => {
@@ -69,10 +72,27 @@ export function useBoard(): UseBoard {
         const fresh = await fetchState(token)
         if (!cancelled) {
           setState(fresh)
+          setServerOk(true)
         }
       } catch {
-        // The connection overlay already tells the class something is wrong.
+        // Shown as «Server bilan aloqa yo'q» once the WebSocket is down too.
+        if (!cancelled) {
+          setServerOk(false)
+        }
       }
+    }
+
+    const schedulePoll = (): void => {
+      window.clearTimeout(poll)
+      poll = window.setTimeout(
+        async () => {
+          await resync()
+          if (!cancelled) {
+            schedulePoll()
+          }
+        },
+        live ? config.pollIntervalMs : config.fallbackPollMs,
+      )
     }
 
     const start = async (): Promise<void> => {
@@ -115,16 +135,21 @@ export function useBoard(): UseBoard {
 
         let wasConnected = false
         stopConnectionWatch = echo.connector.onConnectionChange((status) => {
-          setConnection(status)
-          if (status === 'connected') {
+          setSocket(status)
+          const wasLive = live
+          live = status === 'connected'
+          if (live) {
             if (wasConnected) {
               void resync()
             }
             wasConnected = true
           }
+          if (live !== wasLive) {
+            schedulePoll()
+          }
         })
 
-        poll = window.setInterval(() => void resync(), config.pollIntervalMs)
+        schedulePoll()
       } catch (exception) {
         if (cancelled) {
           return
@@ -140,7 +165,7 @@ export function useBoard(): UseBoard {
       cancelled = true
       stopConnectionWatch?.()
       echo?.disconnect()
-      window.clearInterval(poll)
+      window.clearTimeout(poll)
       window.clearTimeout(retryTimer)
     }
   }, [attempt, setState])
@@ -169,6 +194,8 @@ export function useBoard(): UseBoard {
   }, [expiresAt, setState])
 
   const controllerOnline = useControllerOnline(state?.is_paired ?? false, seenAt, state?.controller_timeout)
+
+  const connection: ConnectionStatus = socket === 'connected' ? 'connected' : serverOk ? 'polling' : socket
 
   return { state, error, connection, controllerOnline, retry }
 }

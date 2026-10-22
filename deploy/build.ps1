@@ -18,7 +18,8 @@ foreach ($line in Get-Content (Join-Path $Root 'backend\.env')) {
 if (-not $backendEnv['REVERB_APP_KEY']) { throw 'backend\.env da REVERB_APP_KEY yo''q' }
 
 $env:VITE_REVERB_APP_KEY = $backendEnv['REVERB_APP_KEY']
-$env:VITE_REVERB_PORT = if ($backendEnv['REVERB_PORT']) { $backendEnv['REVERB_PORT'] } else { '8080' }
+# No VITE_REVERB_PORT: the built board reaches Reverb through the web
+# server's own port (/app/ is passed on to Reverb), see board/src/config.ts.
 $env:VITE_REVERB_SCHEME = 'http'
 
 # npm prints warnings on stderr; success is judged by the exit code.

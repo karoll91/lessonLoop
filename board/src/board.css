@@ -713,26 +713,26 @@
 }
 
 /* D9 connection lost */
+/* In the bottom-right corner, so the question and options stay readable. */
 .overlay-card {
   position: absolute;
-  left: 50%;
+  right: 1.5rem;
   bottom: 5.25rem;
-  transform: translateX(-50%);
-  width: 47.5rem;
-  border-radius: 1.5rem;
+  width: min(30rem, calc(100% - 3rem));
+  border-radius: 1.25rem;
   background: var(--surface);
   box-shadow: var(--shadow);
   border: 2px solid var(--danger);
-  padding: 1.5rem 1.75rem;
+  padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   z-index: 10;
 }
 
 .overlay-icon {
-  width: 4rem;
-  height: 4rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   background: var(--danger-soft);
   color: var(--danger);
@@ -748,7 +748,7 @@
 }
 
 .overlay-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 800;
 }
 

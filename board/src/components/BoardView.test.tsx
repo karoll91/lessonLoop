@@ -35,6 +35,15 @@ describe('BoardView', () => {
     expect(screen.queryByTestId('remote-lost')).not.toBeInTheDocument()
   })
 
+  it('does not cover the question while it follows the phone by polling (WebSocket down, server fine)', () => {
+    show(boardState({ screen: 'question', current: { student: { full_name: 'Madina Yusupova' }, question: openQuestion } }), 'polling')
+
+    expect(screen.queryByText("Server bilan aloqa yo'q")).not.toBeInTheDocument()
+    expect(screen.queryByText("Aloqa yo'q")).not.toBeInTheDocument()
+    expect(screen.getByText('Pult ulangan')).toBeInTheDocument()
+    expect(screen.getByTestId('question-text')).toHaveTextContent(openQuestion.text)
+  })
+
   it('shows the six-digit pairing code while waiting for the phone', () => {
     show(boardState({ screen: 'pairing', is_paired: false, lesson: undefined, pair_code: '482913', pair_code_expires_at: new Date(Date.now() + 120_000).toISOString() }))
 

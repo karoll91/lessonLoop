@@ -1,5 +1,5 @@
 import { toggleFullscreen, type Theme } from '../hooks'
-import type { BoardState, ConnectionStatus } from '../types'
+import { isOnline, type BoardState, type ConnectionStatus } from '../types'
 import { MicIcon, OfflineIcon } from './icons'
 import {
   AnswerScreen,
@@ -32,7 +32,7 @@ export function BoardView({ state, connection, controllerOnline = true, theme, o
     )
   }
 
-  const remoteLost = connection === 'connected' && state.is_paired && !controllerOnline && state.screen !== 'pairing'
+  const remoteLost = isOnline(connection) && state.is_paired && !controllerOnline && state.screen !== 'pairing'
 
   const answerKey = `${state.lesson?.id ?? 0}:${state.lesson?.asked_count ?? 0}:${state.current?.student?.full_name ?? ''}`
 
@@ -47,7 +47,7 @@ export function BoardView({ state, connection, controllerOnline = true, theme, o
       footer={<Footer state={state} />}
     >
       {renderScreen(state, answerKey)}
-      {connection !== 'connected' && <ConnectionLost />}
+      {!isOnline(connection) && <ConnectionLost />}
       {remoteLost && <RemoteLost />}
     </Shell>
   )

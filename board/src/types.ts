@@ -81,4 +81,11 @@ export interface BoardState {
   summary?: BoardSummary
 }
 
-export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'reconnecting' | 'failed'
+/**
+ * 'polling': the WebSocket is down but the server answers, so the board keeps
+ * up by asking every few seconds -- nothing to warn the class about.
+ */
+export type ConnectionStatus = 'connected' | 'polling' | 'disconnected' | 'connecting' | 'reconnecting' | 'failed'
+
+/** The board gets updates (live or by asking): nothing to warn about. */
+export const isOnline = (connection: ConnectionStatus): boolean => connection === 'connected' || connection === 'polling'

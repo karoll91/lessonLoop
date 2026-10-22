@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Theme } from '../hooks'
-import type { BoardState, ConnectionStatus } from '../types'
+import { isOnline, type BoardState, type ConnectionStatus } from '../types'
 import { ExpandIcon, MoonIcon, SunIcon } from './icons'
 
 interface ShellProps {
@@ -91,7 +91,7 @@ export function Progress({ state }: { state: BoardState }) {
 }
 
 function LinkStatus({ state, connection, remoteLost }: { state: BoardState; connection: ConnectionStatus; remoteLost: boolean }) {
-  if (connection !== 'connected') {
+  if (!isOnline(connection)) {
     return <span className="live off">Aloqa yo'q</span>
   }
 
