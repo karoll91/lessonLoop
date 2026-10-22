@@ -12,6 +12,8 @@ use App\Models\Answer;
 use App\Models\BoardSession;
 use App\Models\Lesson;
 use App\Models\User;
+use Illuminate\Broadcasting\BroadcastException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Random\Randomizer;
@@ -78,7 +80,7 @@ class BoardRemote
         ]);
 
         if ($previousControllerId !== null && $previousControllerId !== $teacher->id) {
-            BoardControlLost::dispatch($board, $previousControllerId, $teacher);
+            $this->send(new BoardControlLost($board, $previousControllerId, $teacher));
         }
 
         $this->broadcast($board);
@@ -199,7 +201,7 @@ class BoardRemote
         $board->forceFill(['controller_seen_at' => now()])->save();
 
         if ($wasOnline) {
-            BoardControllerSeen::dispatch($board);
+            $this->send(new BoardControllerSeen($board));
         } else {
             $this->broadcast($board);
         }
@@ -217,7 +219,22 @@ class BoardRemote
 
     private function broadcast(BoardSession $board): void
     {
-        BoardUpdated::dispatch($board, $this->presenter->present($board));
+        $this->send(new BoardUpdated($board, $this->presenter->present($board)));
+    }
+
+    /**
+     * Push an event to the board and phone. The change is already saved, and
+     * the board re-reads its state every 30 s, so Reverb being down must not
+     * turn a pairing or a command into an error (the phone would then retry
+     * with a used code, or think the step failed).
+     */
+    private function send(object $event): void
+    {
+        try {
+            event($event);
+        } catch (BroadcastException $exception) {
+            Log::warning('Board update not broadcast (is Reverb running?): '.$exception->getMessage());
+        }
     }
 
     /**

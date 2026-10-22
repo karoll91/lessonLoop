@@ -9,7 +9,10 @@ use App\Events\BoardUpdated;
 use App\Models\BoardSession;
 use App\Models\Lesson;
 use App\Models\User;
+use Illuminate\Broadcasting\Broadcasters\Broadcaster;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
@@ -32,6 +35,35 @@ class BoardControllerTest extends TestCase
     public function test_board_state_returns_404_for_an_unknown_token(): void
     {
         $this->getJson(route('boards.state', 'not-a-token'))->assertNotFound();
+    }
+
+    public function test_pairing_and_commands_work_while_reverb_is_down(): void
+    {
+        Broadcast::extend('down', fn (): Broadcaster => new class extends Broadcaster
+        {
+            public function auth($request): mixed
+            {
+                return null;
+            }
+
+            public function validAuthenticationResponse($request, $result): mixed
+            {
+                return null;
+            }
+
+            public function broadcast(array $channels, $event, array $payload = []): void
+            {
+                throw new BroadcastException('Failed to connect to localhost port 8080');
+            }
+        });
+        config(['broadcasting.connections.down' => ['driver' => 'down'], 'broadcasting.default' => 'down']);
+
+        [, $board] = $this->pairedBoardWithLesson();
+        $code = BoardSession::factory()->create()->pair_code;
+
+        $this->postJson(route('boards.pair'), ['code' => $code])->assertOk()->assertJsonPath('state.is_paired', true);
+        $this->command($board, 'draw')->assertJsonPath('state.screen', BoardScreen::Drawing->value);
+        $this->postJson(route('boards.heartbeat', $board))->assertOk();
     }
 
     public function test_teacher_pairs_with_the_code_and_the_board_switches_to_the_lobby(): void
@@ -183,6 +215,7 @@ class BoardControllerTest extends TestCase
 
     public function test_board_shows_the_controller_offline_after_45_seconds_without_a_heartbeat(): void
     {
+        $this->freezeTime();
         $teacher = User::factory()->create();
         $board = BoardSession::factory()->create([
             'controller_id' => $teacher->id,
