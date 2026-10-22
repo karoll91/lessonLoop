@@ -30,6 +30,8 @@ export interface UseBoard {
   connection: ConnectionStatus
   /** False while the paired phone is silent (D9 «Pult uzildi»). */
   controllerOnline: boolean
+  /** This board's secret token (teacher mode claims the board with it). */
+  token: string | null
   retry: () => void
 }
 
@@ -46,6 +48,7 @@ export function useBoard(): UseBoard {
   const [socket, setSocket] = useState<ConnectionStatus>('connecting')
   const [serverOk, setServerOk] = useState(true)
   const [attempt, setAttempt] = useState(0)
+  const [token, setToken] = useState<string | null>(null)
   const tokenRef = useRef<string | null>(null)
 
   const retry = useCallback(() => setAttempt((value) => value + 1), [])
@@ -124,6 +127,7 @@ export function useBoard(): UseBoard {
 
         storage.set(token)
         tokenRef.current = token
+        setToken(token)
         setState(initial)
         setError(null)
 
@@ -197,5 +201,5 @@ export function useBoard(): UseBoard {
 
   const connection: ConnectionStatus = socket === 'connected' ? 'connected' : serverOk ? 'polling' : socket
 
-  return { state, error, connection, controllerOnline, retry }
+  return { state, error, connection, controllerOnline, token, retry }
 }

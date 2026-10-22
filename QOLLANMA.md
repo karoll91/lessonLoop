@@ -70,7 +70,7 @@ Telefon va doska kompyuteri serverga ulana olishi uchun portlar ochiladi. **Admi
 powershell -ExecutionPolicy Bypass -File D:\OSPanel\domains\LessonLoop.loc\deploy\firewall.ps1
 ```
 
-8000 (sayt va API) va 8080 (real vaqt — doska yangilanishi) portlariga ruxsat beriladi. Windows'da Wi-Fi tarmog'i **«Частная» (Private)** bo'lishi kerak: Параметры → Сеть и Интернет → Wi-Fi → tarmoq → «Частная сеть».
+8000-portga (sayt, API va doskaning real vaqt ulanishi — u ham shu port orqali o'tadi) ruxsat beriladi; 8080 ham ochiladi, lekin endi tarmoqdan kerak emas. Windows'da Wi-Fi tarmog'i **«Частная» (Private)** bo'lishi kerak: Параметры → Сеть и Интернет → Wi-Fi → tarmoq → «Частная сеть».
 
 ### 1.6. Avtomatik ishga tushirish (ixtiyoriy)
 
@@ -86,7 +86,7 @@ Windows'ga kirilgandan 1 daqiqa o'tib `start.bat` o'zi ishga tushadi. O'chirish:
 
 ## 2. Serverni yoqish va o'chirish
 
-Sayt qismini (API, `/admin/`, `/board/`, `/docs/`) **OpenServer 6** beradi. Ikki narsa veb-so'rov emas, ular uchun alohida oyna kerak: **Reverb** (doska real vaqtda yangilanishi, 8080) va **rejalashtiruvchi** (eski doska sessiyalarini tozalash, kunlik zaxira nusxa).
+Sayt qismini (API, `/admin/`, `/board/`, `/docs/`) **OpenServer 6** beradi. Ikki narsa veb-so'rov emas, ular uchun alohida oyna kerak: **Reverb** (doska real vaqtda yangilanishi; ichkarida 8080 da ishlaydi, doska unga 8000-port orqali ulanadi) va **rejalashtiruvchi** (eski doska sessiyalarini tozalash, kunlik zaxira nusxa).
 
 1. **OpenServer 6** yoqilgan bo'lsin (Nginx, PHP-8.3, MySQL-8.4 — yashil).
 2. `deploy\start.bat` ni ishga tushiring. U bazani yangilaydi (migratsiyalar), Reverb va rejalashtiruvchini yoqadi va manzillarni ko'rsatadi:
@@ -201,7 +201,22 @@ Telefonda **Bugun → Doska ulanmagan → QR** tugmasi (yoki Sozlamalar → Dosk
 
 Dars paytida yuqoridagi doska menyusi: **Tanaffus** (savollar yashiriladi), **Qora ekran**, **Davom ettirish**, doskada ko'rsatish sozlamalari (talaba ismi, to'g'ri javob, baho).
 
-### 5.5. Internet uzilsa
+### 5.5. Doskaning o'zidan boshqarish (o'qituvchi rejimi)
+
+Telefon bo'lmasa yoki doska yonida turib boshqarish qulay bo'lsa:
+
+1. Doskada pastki o'ng burchakdagi **kalit** tugmasi («O'qituvchi rejimi») → o'z **login va parolingiz** bilan kiring. Talabalar ham ekranni ko'radi, shuning uchun parol yashirin kiritiladi.
+2. Pastda boshqaruv paneli chiqadi:
+   - **dars yo'q bo'lsa:** davom etayotgan darsni tanlash yoki yangi dars — kurs, mavzular, kelmaganlar, savollar soni → «Darsni boshlash»;
+   - **dars paytida:** «Random — keyingi talaba», «To'g'ri javobni ko'rsatish/yashirish», «Boshqa talaba», «Javob bermadi», «Darsda yo'q», baho (0/40/60/75/90/100 yoki slayder → «N ball qo'yish»), test savolida talaba aytgan variant (A–D), «Darsni yakunlash»;
+   - **ekran:** tanaffus, qora ekran, davom ettirish, ism/javob/bahoni ko'rsatish.
+3. «Yashirish ▾» — panelni yig'ish (savol to'liq ko'rinadi), «Panel ▴» — qayta ochish, «Chiqish» — o'qituvchi rejimidan chiqish.
+
+Panel to'g'ri javobni hech qachon o'zi ko'rsatmaydi: u faqat «To'g'ri javobni ko'rsatish» bosilganda doskada chiqadi. Telefon va doska bir vaqtda ishlatilishi mumkin: telefon dars ekrani ochiq bo'lsa, doskada qilingan o'zgarishlarni (baho, yangi talaba, yakun) 3 soniya ichida o'zi ko'rsatadi. Doska sahifasi qayta yuklansa, o'qituvchi rejimi saqlanib qoladi.
+
+> Darsdan keyin **«Chiqish»** ni bosishni unutmang — aks holda doska kompyuterida keyin kelgan kishi sizning nomingizdan boshqarishi mumkin.
+
+### 5.6. Internet uzilsa
 
 - Baho yoki «o'tkazish» internetsiz ham saqlanadi: telefonda **«N ta baho telefonda saqlangan, hali yuborilmagan»** ogohlantirishi chiqadi. Aloqa tiklanganda (har 15 soniyada urinadi) o'zi yuboriladi; «Yuborish» tugmasi bilan darhol yuborish ham mumkin.
 - Har bir baho bir marta qo'llanadi — ikki marta yuborilsa ham ikki marta yozilmaydi. Bahoning vaqti — telefonda qo'yilgan vaqt.
@@ -209,7 +224,7 @@ Dars paytida yuqoridagi doska menyusi: **Tanaffus** (savollar yashiriladi), **Qo
 - Server qabul qilmagan baho (masalan, javob allaqachon baholangan) talaba ismi bilan ko'rsatiladi.
 - Telefonda yuborilmagan baho bo'lsa, «Chiqish» bosilganda ogohlantiriladi.
 
-### 5.6. Tarix va bahoni tuzatish
+### 5.7. Tarix va bahoni tuzatish
 
 Telefonda **Tarix** (yoki admin panelda «Darslar tarixi») → dars → talaba → yangi ball va **sabab**. O'qituvchi 24 soat ichida tuzata oladi, keyin faqat admin. Har bir tuzatish tarixda saqlanadi (kim, qachon, eski → yangi, sabab).
 
@@ -305,7 +320,7 @@ G:\OSPanel\modules\MySQL-8.4\bin\mysql.exe -h mysql-8.4 -u root lessonloop < les
 | Brauzerda «Как вы здесь оказались?» | So'rov kelgan manzil (IP) loyiha taxalluslarida yo'q — 1.2 dagi «Kompyuter IP'si o'zgarsa» |
 | `/admin/` ochiladi, lekin bo'sh yoki 404 | `deploy\build.bat` ni ishga tushiring |
 | Telefon: «Serverga ulanib bo'lmadi» | Telefon va server bitta Wi-Fi'dami? Server manzili to'g'rimi (`http://IP:8000/api`)? Firewall (1.5)? Server kompyuterning brauzerida `http://IP:8000/admin/` ochiladimi? |
-| Doska: yuqorida «Aloqa yo'q», qizil «Server bilan aloqa yo'q» | Doska kompyuteri serverga ulana olmayapti yoki 8080 port yopiq (firewall). Aloqa tiklanganda o'zi davom etadi |
+| Doska: yuqorida «Aloqa yo'q», burchakda «Server bilan aloqa yo'q» | Doska kompyuteri serverga (8000-port) ulana olmayapti. Aloqa tiklanganda o'zi davom etadi. Agar faqat real vaqt kanali (Reverb) ishlamasa, doska ogohlantirishsiz har 3 soniyada yangilanadi — `deploy\start.bat` ishlayotganini tekshiring |
 | Doska: «Pult uzildi» | Telefondan 45 soniya signal yo'q: ilova ochiqmi, telefon Wi-Fi'dami? Ilovani ochsangiz o'zi tiklanadi |
 | Doska kodi qabul qilinmaydi | Kod 5 daqiqa amal qiladi — doskadagi yangi kodni kiriting |
 | Telefonda «N ta baho yuborilmagan» | Internet/Wi-Fi'ni tekshiring; tiklanganda o'zi ketadi |

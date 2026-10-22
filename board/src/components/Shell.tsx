@@ -11,11 +11,13 @@ interface ShellProps {
   onToggleTheme: () => void
   onFullscreen: () => void
   footer: ReactNode
+  /** Extra button before the theme switch (teacher mode). */
+  tool?: ReactNode
   children: ReactNode
 }
 
 /** Top bar (lesson, progress, link status), content and footer of every screen. */
-export function Shell({ state, connection, remoteLost = false, theme, onToggleTheme, onFullscreen, footer, children }: ShellProps) {
+export function Shell({ state, connection, remoteLost = false, theme, onToggleTheme, onFullscreen, footer, tool, children }: ShellProps) {
   const lesson = state.lesson
 
   return (
@@ -45,6 +47,7 @@ export function Shell({ state, connection, remoteLost = false, theme, onToggleTh
       <footer className="foot">
         {footer}
         <span className="foot-tools">
+          {tool}
           <button type="button" className="tool" onClick={onToggleTheme} aria-label={theme === 'dark' ? 'Yorug\' mavzu' : 'Qorong\'i mavzu'} title="T">
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>

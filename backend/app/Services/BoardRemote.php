@@ -69,13 +69,41 @@ class BoardRemote
             throw ValidationException::withMessages(['code' => 'Kod noto\'g\'ri yoki muddati tugagan.']);
         }
 
+        return $this->takeControl($board, $teacher, ['screen' => BoardScreen::Lobby]);
+    }
+
+    /**
+     * A teacher signed in on the board itself (teacher mode) controls it. The
+     * board proves itself with its secret token, so no code is needed. If the
+     * teacher already controls it (e.g. from the phone), the lesson goes on;
+     * a board that someone else controlled starts over in the lobby.
+     */
+    public function claim(BoardSession $board, User $teacher): BoardSession
+    {
+        if ($board->controller_id === $teacher->id) {
+            $board->forceFill(['controller_seen_at' => now()])->save();
+
+            return $board;
+        }
+
+        return $this->takeControl($board, $teacher, [
+            'screen' => BoardScreen::Lobby,
+            'lesson_id' => null,
+            'answer_id' => null,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $changes
+     */
+    private function takeControl(BoardSession $board, User $teacher, array $changes): BoardSession
+    {
         $previousControllerId = $board->controller_id;
 
-        $board->update([
+        $board->update($changes + [
             'controller_id' => $teacher->id,
             'pair_code' => null,
             'pair_code_expires_at' => null,
-            'screen' => BoardScreen::Lobby,
             'controller_seen_at' => now(),
         ]);
 

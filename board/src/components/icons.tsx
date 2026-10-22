@@ -58,3 +58,12 @@ export const ExpandIcon = () => (
     <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
   </Icon>
 )
+
+export const KeyIcon = () => (
+  <Icon>
+    <circle cx="7.5" cy="15.5" r="4.5" />
+    <path d="M10.7 12.3 21 2" />
+    <path d="m16 7 3 3" />
+    <path d="m19 4 2 2" />
+  </Icon>
+)

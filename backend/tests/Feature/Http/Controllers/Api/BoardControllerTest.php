@@ -37,6 +37,59 @@ class BoardControllerTest extends TestCase
         $this->getJson(route('boards.state', 'not-a-token'))->assertNotFound();
     }
 
+    public function test_teacher_mode_on_the_board_takes_the_board_by_its_token(): void
+    {
+        $board = BoardSession::factory()->create();
+        $teacher = User::factory()->create();
+        Sanctum::actingAs($teacher);
+
+        $this->postJson(route('boards.claim'), ['token' => $board->token])
+            ->assertOk()
+            ->assertJsonPath('state.board_id', $board->id)
+            ->assertJsonPath('state.screen', BoardScreen::Lobby->value)
+            ->assertJsonPath('state.controller_online', true);
+
+        $board->refresh();
+        $this->assertSame($teacher->id, $board->controller_id);
+        $this->assertNull($board->pair_code);
+    }
+
+    public function test_claiming_a_board_the_teacher_already_runs_from_the_phone_keeps_the_lesson(): void
+    {
+        [, $board] = $this->pairedBoardWithLesson();
+        $this->command($board, 'draw');
+        $lessonId = $board->fresh()->lesson_id;
+
+        $this->postJson(route('boards.claim'), ['token' => $board->token])
+            ->assertOk()
+            ->assertJsonPath('state.screen', BoardScreen::Drawing->value)
+            ->assertJsonPath('state.lesson.id', $lessonId);
+    }
+
+    public function test_claiming_another_teachers_board_starts_over_and_tells_that_teacher(): void
+    {
+        [$previous, $board] = $this->pairedBoardWithLesson();
+        Sanctum::actingAs(User::factory()->create());
+        Event::fake([BoardUpdated::class, BoardControlLost::class]);
+
+        $this->postJson(route('boards.claim'), ['token' => $board->token])
+            ->assertOk()
+            ->assertJsonPath('state.screen', BoardScreen::Lobby->value)
+            ->assertJsonMissingPath('state.lesson');
+
+        Event::assertDispatched(BoardControlLost::class, fn (BoardControlLost $event): bool => $event->previousControllerId === $previous->id);
+    }
+
+    public function test_claim_needs_a_signed_in_teacher_and_a_real_board_token(): void
+    {
+        $board = BoardSession::factory()->create();
+
+        $this->postJson(route('boards.claim'), ['token' => $board->token])->assertUnauthorized();
+
+        Sanctum::actingAs(User::factory()->create());
+        $this->postJson(route('boards.claim'), ['token' => 'not-a-board'])->assertNotFound();
+    }
+
     public function test_pairing_and_commands_work_while_reverb_is_down(): void
     {
         Broadcast::extend('down', fn (): Broadcaster => new class extends Broadcaster

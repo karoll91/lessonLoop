@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Teacher phone as the board remote.
     */
     Route::post('/boards/pair', [BoardController::class, 'pair'])->middleware('throttle:10,1')->name('boards.pair');
+    Route::post('/boards/claim', [BoardController::class, 'claim'])->middleware('throttle:10,1')->name('boards.claim');
     Route::get('/boards/{board}/controller-state', [BoardController::class, 'controllerState'])->name('boards.controller-state');
     Route::post('/boards/{board}/heartbeat', [BoardController::class, 'heartbeat'])->middleware('throttle:20,1')->name('boards.heartbeat');
     Route::post('/boards/{board}/lesson', [BoardController::class, 'attach'])->name('boards.attach');

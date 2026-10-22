@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { toggleFullscreen, type Theme } from '../hooks'
 import { isOnline, type BoardState, type ConnectionStatus } from '../types'
 import { MicIcon, OfflineIcon } from './icons'
@@ -20,10 +21,12 @@ interface BoardViewProps {
   controllerOnline?: boolean
   theme: Theme
   onToggleTheme: () => void
+  /** Extra footer button (teacher mode). */
+  tool?: ReactNode
 }
 
 /** Picks the screen for the current board state (D1–D10). */
-export function BoardView({ state, connection, controllerOnline = true, theme, onToggleTheme }: BoardViewProps) {
+export function BoardView({ state, connection, controllerOnline = true, theme, onToggleTheme, tool }: BoardViewProps) {
   if (state.screen === 'blackout') {
     return (
       <div className="blackout" data-testid="blackout">
@@ -45,6 +48,7 @@ export function BoardView({ state, connection, controllerOnline = true, theme, o
       onToggleTheme={onToggleTheme}
       onFullscreen={toggleFullscreen}
       footer={<Footer state={state} />}
+      tool={tool}
     >
       {renderScreen(state, answerKey)}
       {!isOnline(connection) && <ConnectionLost />}

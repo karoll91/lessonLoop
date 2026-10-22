@@ -72,6 +72,19 @@ class BoardController extends Controller
         return response()->json(['state' => $this->remote->state($board)]);
     }
 
+    /**
+     * Teacher mode on the board: the signed-in teacher takes the board that
+     * owns this token. Returns the board id for the remote-control endpoints.
+     */
+    public function claim(Request $request): JsonResponse
+    {
+        $request->validate(['token' => ['required', 'string', 'max:64']]);
+
+        $board = $this->remote->claim($this->findByToken($request->string('token')), $request->user());
+
+        return response()->json(['state' => $this->remote->state($board)]);
+    }
+
     public function attach(AttachBoardLessonRequest $request, BoardSession $board): JsonResponse
     {
         $board = $this->remote->attach($board, Lesson::query()->findOrFail($request->integer('lesson_id')));

@@ -1,4 +1,3 @@
-import '../../core/i18n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/outbox.dart';
 import '../../core/providers.dart';
@@ -51,10 +51,66 @@ class _LessonRunScreenState extends ConsumerState<LessonRunScreen> {
       throw ApiException(0, tr("Telefonda saqlangan baholar hali yuborilmadi. Internet ulanishini tekshiring."));
     }
   }
+  /// The board's teacher mode can move the lesson on too; see [_follow].
+  Timer? _followTimer;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _followTimer = Timer.periodic(const Duration(seconds: 3), (_) => _follow());
+  }
+
+  @override
+  void dispose() {
+    _followTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Follow changes made elsewhere (grading or drawing on the board in
+  /// teacher mode) while nothing is happening on the phone.
+  Future<void> _follow() async {
+    if (!mounted || _busy || _phase == _Phase.loading || _phase == _Phase.drawing || _phase == _Phase.finished) {
+      return;
+    }
+    if (ref.read(outboxProvider).hasLesson(widget.lessonId)) {
+      return;
+    }
+    final Lesson lesson;
+    try {
+      lesson = await _fetch();
+    } on ApiException {
+      return;
+    }
+    if (!mounted || _busy || _phase == _Phase.drawing) {
+      return;
+    }
+
+    final pending = lesson.pending;
+    if (lesson.isFinished) {
+      setState(() {
+        _lesson = lesson;
+        _current = null;
+        _phase = _Phase.finished;
+      });
+      return;
+    }
+    if (pending?.id == _current?.id) {
+      if (lesson.scored.length != _lesson?.scored.length || lesson.askedCount != _lesson?.askedCount) {
+        setState(() => _lesson = lesson);
+      }
+      return;
+    }
+    final closed = _current == null ? null : lesson.answers.where((answer) => answer.id == _current!.id).firstOrNull;
+    setState(() {
+      if (closed != null && !closed.isPending) {
+        _last = closed;
+      }
+      _lesson = lesson;
+      _current = pending;
+      _revealed = false;
+      _phase = pending == null ? _Phase.idle : _Phase.question;
+    });
   }
 
   Future<Lesson> _fetch() async {
