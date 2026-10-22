@@ -1,67 +1,61 @@
 {
-  "version": "0.0.1",
-  "configurations": [
-    {
-      "name": "api",
-      "runtimeExecutable": "D:/php83/php.exe",
-      "runtimeArgs": [
-        "backend/artisan",
-        "serve",
-        "--host=0.0.0.0",
-        "--port=8000"
-      ],
-      "port": 8000
-    },
-    {
-      "name": "reverb",
-      "runtimeExecutable": "D:/php83/php.exe",
-      "runtimeArgs": [
-        "backend/artisan",
-        "reverb:start",
-        "--host=0.0.0.0",
-        "--port=8080",
-        "--debug"
-      ],
-      "port": 8080
-    },
-    {
-      "name": "board",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "--prefix",
-        "board",
-        "run",
-        "dev",
-        "--",
-        "--port",
-        "5173",
-        "--host",
-        "0.0.0.0"
-      ],
-      "port": 5173
-    },
-    {
-      "name": "admin",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "--prefix",
-        "admin",
-        "run",
-        "dev",
-        "--",
-        "--port",
-        "5174",
-        "--host",
-        "0.0.0.0"
-      ],
-      "port": 5174
-    },
-    {
-      "name": "mobile-web",
-      "runtimeExecutable": "D:/php83/php.exe",
-      "runtimeArgs": ["-S", "0.0.0.0:5180", "-t", "mobile/build/web"],
-      "port": 5180,
-      "autoPort": false
-    }
-  ]
+    "version": "0.0.1",
+    "configurations": [
+        {
+            "name": "reverb",
+            "runtimeExecutable": "G:/OSPanel/modules/PHP-8.3/php.exe",
+            "runtimeArgs": [
+                "backend/artisan",
+                "reverb:start",
+                "--host=0.0.0.0",
+                "--port=8080",
+                "--debug"
+            ],
+            "port": 8080
+        },
+        {
+            "name": "board",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "--prefix",
+                "board",
+                "run",
+                "dev",
+                "--",
+                "--port",
+                "5173",
+                "--host",
+                "0.0.0.0"
+            ],
+            "port": 5173
+        },
+        {
+            "name": "admin",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "--prefix",
+                "admin",
+                "run",
+                "dev",
+                "--",
+                "--port",
+                "5174",
+                "--host",
+                "0.0.0.0"
+            ],
+            "port": 5174
+        },
+        {
+            "name": "mobile-web",
+            "runtimeExecutable": "G:/OSPanel/modules/PHP-8.3/php.exe",
+            "runtimeArgs": [
+                "-S",
+                "0.0.0.0:5180",
+                "-t",
+                "mobile/build/web"
+            ],
+            "port": 5180,
+            "autoPort": false
+        }
+    ]
 }

@@ -2,18 +2,33 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_the_start_page_opens_the_admin_panel(): void
     {
-        $response = $this->get('/');
+        $this->get('/')->assertRedirect('/admin/');
+    }
 
-        $response->assertStatus(200);
+    public function test_admin_panel_addresses_return_its_index_page_after_a_reload(): void
+    {
+        $index = public_path('admin/index.html');
+        $existed = is_file($index);
+        if (! $existed) {
+            File::ensureDirectoryExists(dirname($index));
+            File::put($index, '<!doctype html><title>LessonLoop — admin</title>');
+        }
+
+        try {
+            $response = $this->get('/admin/groups/3')->assertOk();
+
+            $this->assertSame(realpath($index), $response->baseResponse->getFile()->getRealPath());
+        } finally {
+            if (! $existed) {
+                File::deleteDirectory(dirname($index));
+            }
+        }
     }
 }

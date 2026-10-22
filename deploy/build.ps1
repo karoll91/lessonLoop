@@ -36,4 +36,4 @@ foreach ($app in @('board', 'admin')) {
     if ($LASTEXITCODE -ne 0) { throw "${app}: build xato" }
 }
 
-Write-Host "Tayyor: admin\dist va board\dist. Endi deploy\start.bat"
+Write-Host "Tayyor: backend\public\admin va backend\public\board. Endi serverni ishga tushiring (QOLLANMA.md)."

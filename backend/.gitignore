@@ -28,3 +28,7 @@ Thumbs.db
 
 # Scribe working files (php artisan scribe:generate)
 /.scribe
+
+# Built admin panel and board (deployuild.bat)
+/public/admin
+/public/board

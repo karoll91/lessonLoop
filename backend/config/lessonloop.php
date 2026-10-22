@@ -66,7 +66,7 @@ return [
 
     'backup' => [
         'directory' => env('LESSONLOOP_BACKUP_DIR', storage_path('app/backups')),
-        'mysqldump' => env('LESSONLOOP_MYSQLDUMP', 'D:\OSPanel\modules\database\MySQL-8.0-Win10\bin\mysqldump.exe'),
+        'mysqldump' => env('LESSONLOOP_MYSQLDUMP', 'G:\OSPanel\modules\MySQL-8.4\bin\mysqldump.exe'),
         'keep_days' => (int) env('LESSONLOOP_BACKUP_DAYS', 30),
         'timezone' => env('LESSONLOOP_LOCAL_TIMEZONE', 'Asia/Tashkent'),
     ],

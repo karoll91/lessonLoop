@@ -31,17 +31,17 @@ LessonLoop — o'qituvchi har darsda o'tilgan mavzularni talabalar bilan takrorl
 
 ## Lokal muhit
 
-- **PHP 8.3:** `D:\php83\php.exe`. OpenServer 5'da eng yangi PHP 8.1; OpenServer o'z papkasidagi PHP'ni o'z wrapper'i bilan almashtirib yuboradi, shuning uchun PHP 8.3 OpenServer'dan tashqarida turadi.
+- **Open Server Panel 6.4.6:** `G:\OSPanel` — modullar Nginx, PHP-8.3, MySQL-8.4. Loyiha `G:\OSPanel\home\lessonloop.loc` (repo'ga junction, `deploy\osp6-link.bat`), sozlamalar repo'dagi `.osp\` da. API, `/admin/`, `/board/`, `/docs/` — `http://<IP>:8000` (2026-10-22 dan).
+- **PHP 8.3:** `G:\OSPanel\modules\PHP-8.3\php.exe` (rasmiy build, panelsiz ham ishlaydi). Eski `D:\php83` ishlatilmaydi: OpenServer 5 u yerdagi va o'z papkasidagi exe'larni imzosiz o'ram bilan almashtirgan (panel o'chiq bo'lsa hech narsa qilmaydi).
 - **Flutter 3.47.7:** `D:\flutter` (rasmiy zip, PATH'ga qo'shilmagan: `D:\flutter\bin\flutter.bat`). Android SDK hali o'rnatilmagan — APK uchun Android Studio kerak.
-- **Composer:** `D:\php83\composer.bat` (OpenServer'ning `composer.phar` faylidan foydalanadi).
-- **MySQL:** OpenServer panelidan MySQL-8.0 yoqiladi (port 3306, root, parolsiz).
+- **Composer:** `G:\OSPanel\modules\PHP-8.3\composer.bat`.
+- **MySQL:** OpenServer 6 MySQL-8.4, host `mysql-8.4` (port 3306, root, parolsiz). Eski OpenServer 5 bazasi (MySQL 8.0) `D:\OSPanel\userdata\MySQL-8.0-Win10` da tegilmagan.
 - **Demo ma'lumot:** `php artisan migrate:fresh --seed` — login `admin`, parol `password` (faqat lokal).
 
-Ishga tushirish (loyiha ildizida, har biri alohida terminalda; `.claude/launch.json` da ham bor):
+Ishlab chiqish: API'ni OpenServer 6 beradi (`:8000`). Qolganlari (har biri alohida terminalda; `.claude/launch.json` da ham bor):
 
 ```bash
-/d/php83/php.exe backend/artisan serve --host=0.0.0.0 --port=8000
-/d/php83/php.exe backend/artisan reverb:start --host=0.0.0.0 --port=8080
+/g/OSPanel/modules/PHP-8.3/php.exe backend/artisan reverb:start --host=0.0.0.0 --port=8080
 npm --prefix board run dev -- --port 5173 --host 0.0.0.0
 npm --prefix admin run dev -- --port 5174 --host 0.0.0.0
 ```
@@ -53,7 +53,7 @@ Admin panel: `http://localhost:5174` (demo: `admin` / `password`). Sozlamalar `a
 Testlar:
 
 ```bash
-/d/php83/php.exe backend/artisan test --compact
+/g/OSPanel/modules/PHP-8.3/php.exe backend/artisan test --compact
 npm --prefix board test
 npm --prefix admin test
 (cd mobile && /d/flutter/bin/flutter test)
@@ -138,7 +138,7 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
 
 
 ### Faza 5b — Mobil ilovani yakunlash
-- [ ] Android SDK + APK, haqiqiy telefonda QR va Wi-Fi orqali sinov.
+- [ ] Android SDK + APK, haqiqiy telefonda QR va Wi-Fi orqali sinov. (Android/iOS manifestlari tayyor; SDK'ni foydalanuvchi o'rnatadi — QOLLANMA.md, 7-bo'lim.)
 - [x] Doska ulanishini saqlash va qayta tiklash, telefon heartbeat + «Pult uzildi» (D9).
   - Telefon doska id'sini `SharedPreferences`'da saqlaydi va ilova qayta ochilganda `GET /boards/{board}/controller-state` (faqat ulangan telefon, `BoardSessionPolicy::control`) orqali qayta tiklaydi; 403/404 bo'lsa (boshqa telefon olib qo'ygan yoki doska yopilgan) unutadi, internet bo'lmasa 15 soniyadan keyin qayta urinadi.
   - Ulangan telefon har 15 soniyada `POST /boards/{board}/heartbeat` yuboradi → `board_sessions.controller_seen_at` (yangi ustun; `last_seen_at` doskaning o'zi uchun qoldi). Heartbeat 403/404 qaytarsa telefon doskani unutadi.
@@ -169,6 +169,13 @@ Tartib: avval darsda ishlatish uchun kerak bo'lgan narsalar (doska ekrani), keyi
   - `deploy\config.ps1` — yo'llar, port, ishchilar soni. `deploy\firewall.ps1` (admin huquqi bilan, 8000/8080) va `deploy\autostart.ps1` (Windows'ga kirilganda avtomatik) — foydalanuvchi o'zi ishga tushiradi.
   - Config keshlanmaydi: keshlangan config bilan `php artisan test` phpunit.xml'ni e'tiborsiz qoldirib haqiqiy MySQL bazani tozalab yuborishi mumkin edi.
   - Tekshirildi: :8090 da sinov — admin, doska, API, Reverb orqali doskaga real vaqt (localhost'da), php-cgi va nginx o'ldirilganda o'zi tiklandi, stop.bat hammasini to'xtatdi. LAN IP orqali WebSocket'ni ilova ichidagi brauzer bloklaydi (curl bilan 101 Switching Protocols) — haqiqiy doska kompyuterida sinash kerak.
+- [x] **Open Server Panel 6 ga ko'chish** (2026-10-22). Foydalanuvchi OSP 6.4.6 ni o'rnatdi (`G:\OSPanel`).
+  - Sayt qismi (API, `/admin/`, `/board/`, `/docs/`) — OSP 6 Nginx + PHP-8.3, port 8000, barcha manzillarda (`.osp/project.ini`: `bind_ip = 127.0.0.1 0.0.0.0`). `.osp/nginx/lessonloop.loc.conf` — Laravel qoidalari.
+  - Admin va doska endi `backend/public/admin`, `backend/public/board` ga yig'iladi; `routes/web.php`: `/` → `/admin/`, `/admin/*` → admin `index.html` (sahifa yangilanganda). Shu bilan istalgan veb-server ularni qo'shimcha sozlamasiz beradi.
+  - OSP 6 har portda o'z `default_server`ini qo'yadi: IP yoki localhost bilan kelgan so'rov «Как вы здесь оказались?» sahifasiga tushadi. Yechim — `server_aliases` (localhost, 127.0.0.1, karoll-pc, 192.168.31.94); IP o'zgarsa yangilanadi va panel to'liq qayta yoqiladi (faqat Nginx'ni qayta yoqish yetmaydi). `primary_domain = on` buni hal qilmadi.
+  - `deploy\start.bat` `WebServer = 'OSPanel6'` rejimida faqat Reverb va `schedule:work` ni ishga tushirib kuzatadi (`'Own'` — avvalgi alohida nginx + php-cgi). MySQL tekshiruvi `.env` dagi `DB_HOST`/`DB_PORT` bo'yicha.
+  - Baza: OSP 5 MySQL 8.0 vaqtincha 3310 portda ochilib, OSP 6 ning `mysqldump` 8.4 i bilan nusxa olindi (`lessonloop-2026-10-22_1036.zip`), MySQL-8.4 ga yuklandi; `.env`: `DB_HOST=mysql-8.4`. Zaxira buyrug'i standart holda OSP 6 `mysqldump`idan foydalanadi.
+  - Tekshirildi: 143 backend testi (OSP 6 PHP bilan); `http://192.168.31.94:8000` — admin, doska, docs, API; doska Reverb orqali real vaqtda («Pult ulangan»); kunlik zaxira.
 - [x] Kunlik MySQL zaxira nusxasi, `.env` production sozlamalari.
   - `php artisan lessonloop:backup` — mysqldump (parol `MYSQL_PWD` orqali, buyruq qatorida emas) → zip, `storage/app/backups` (`LESSONLOOP_BACKUP_DIR`), 30 kundan eskilari o'chadi. Rejalashtiruvchi har soat `--if-missing` bilan chaqiradi — kompyuter kechasi o'chiq bo'lsa ham kuniga bitta nusxa bo'ladi. Fayl nomi Toshkent vaqtida.
   - OpenServer'dagi `mysqldump.exe` faylni yozib bo'lishidan oldin qaytadi — buyruq fayl hajmi barqaror bo'lguncha kutadi.

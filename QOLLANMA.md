@@ -22,37 +22,47 @@ Server kompyuterda (hozirgi kompyuterda hammasi bor):
 
 | Dastur | Joyi | Izoh |
 | --- | --- | --- |
-| OpenServer 5 | `D:\OSPanel` | Faqat MySQL uchun (MySQL-8.0, port 3306) |
-| PHP 8.3 | `D:\php83` | `php.exe` va `php-cgi.exe` |
-| nginx | `D:\OSPanel\modules\http\Nginx_1.23` | OpenServer bilan birga keladi |
+| Open Server Panel 6 (6.4.6) | `G:\OSPanel` | Modullar: **Nginx**, **PHP-8.3**, **MySQL-8.4** |
 | Node.js | `C:\Program Files\nodejs` | Admin panel va doskani yig'ish uchun |
 | Loyiha | `D:\OSPanel\domains\LessonLoop.loc` | Git'dan |
 
-Boshqa kompyuterga o'rnatilsa, yo'llar `deploy\config.ps1` faylida o'zgartiriladi.
+OpenServer 6 loyihani `G:\OSPanel\home\lessonloop.loc` orqali ko'radi — bu repo papkasiga bog'lama (junction), kod `D:\` da qoladi. Bog'lamani `deploy\osp6-link.bat` yaratadi (bir marta). Loyiha sozlamalari repo ichidagi `.osp\` papkasida:
 
-> Nima uchun OpenServer domenlari emas? LessonLoop (Laravel 13) PHP 8.3 talab qiladi, OpenServer 5 dagi Apache esa butun panel uchun bitta PHP (eng yangisi 8.1) ishlatadi. Uni almashtirsak, OpenServer'dagi boshqa saytlar (masalan, linuxquiz.uz) buzilardi. Shuning uchun LessonLoop o'zining alohida serveri (nginx + PHP 8.3) bilan ishlaydi, OpenServer'dan faqat MySQL olinadi.
+- `.osp\project.ini` — PHP-8.3, Nginx, port **8000**, barcha tarmoq manzillarida tinglash, ochiq papka `backend\public`, taxalluslar (`server_aliases`);
+- `.osp\nginx\lessonloop.loc.conf` — Laravel uchun nginx qoidalari.
 
-### 1.2. Sozlamalar (`backend\.env`)
+> **Eski OpenServer 5 (`D:\OSPanel`) ni ochmang.** Ikkalasi bir vaqtda ishlasa portlar to'qnashadi. Eski baza `D:\OSPanel\userdata\MySQL-8.0-Win10` da tegilmagan holda qoldi; LessonLoop bazasi 2026-10-22 da MySQL-8.4 ga ko'chirildi.
+>
+> OpenServer 5 o'z papkasidagi `php.exe`, `mysql.exe`, `mysqldump.exe` va `D:\php83` dagi exe'larni imzosiz «o'ram» fayllar bilan almashtirgan: panel o'chiq bo'lsa ular hech narsa qilmaydi. Shuning uchun LessonLoop endi faqat OpenServer 6 ning rasmiy PHP 8.3 (`G:\OSPanel\modules\PHP-8.3`) va MySQL 8.4 dan foydalanadi.
 
-`deploy\env.production.example` faylida server uchun o'zgartiriladigan qiymatlar bor. `backend\.env` faylini Bloknotda oching va shularni yozing:
+### 1.2. OpenServer 6 sozlamasi
+
+1. Panel ikonasi (soat yonida) → chap tugma → **Модули** → **Nginx**, **PHP-8.3**, **MySQL-8.4** → «Включить».
+2. **Проекты** ro'yxatida `lessonloop.loc` bo'lishi kerak. Ko'rinmasa: `deploy\osp6-link.bat` ni ishga tushiring va panelni qayta yoqing (Выход → qayta ochish).
+3. Panel sozlamalarida «Автозапуск» va modullarni avtomatik yoqishni belgilang — shunda Windows yoqilganda hammasi o'zi ishga tushadi.
+
+**Kompyuter IP'si o'zgarsa:** `.osp\project.ini` dagi `server_aliases` qatoriga yangi IP yoziladi (masalan, `server_aliases = localhost 127.0.0.1 karoll-pc 192.168.31.94`) va **panel to'liq qayta yoqiladi** (Выход → qayta ochish; faqat Nginx'ni qayta yoqish yetmaydi). Aks holda IP orqali kelgan so'rovlarni panelning standart sahifasi («Как вы здесь оказались?») ushlab qoladi. Eng yaxshisi — routerda server kompyuterga doimiy IP berish (DHCP reservation).
+
+### 1.3. Sozlamalar (`backend\.env`)
+
+`deploy\env.production.example` faylida server uchun o'zgartiriladigan qiymatlar bor. `backend\.env` faylini Bloknotda oching:
 
 ```
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=http://192.168.31.94:8000      ← server kompyuter IP manzili
 LOG_LEVEL=warning
+DB_HOST=mysql-8.4                      ← OpenServer 6 dagi MySQL moduli nomi
 DB_PASSWORD=                           ← MySQL paroli (qo'yilgan bo'lsa)
 ```
 
 Server IP manzilini bilish: `deploy\start.bat` ishga tushganda o'zi ko'rsatadi, yoki `cmd` da `ipconfig` → «IPv4 Address».
 
-> **Muhim:** IP o'zgarmasligi uchun Wi-Fi routerda server kompyuterga doimiy IP bering (DHCP reservation). Aks holda har safar telefondagi server manzilini o'zgartirishga to'g'ri keladi.
+### 1.4. Admin panel va doskani yig'ish
 
-### 1.3. Admin panel va doskani yig'ish
+`deploy\build.bat` ni ikki marta bosing. 1–2 daqiqa davom etadi, oxirida «Tayyor» chiqadi. Natija `backend\public\admin` va `backend\public\board` ga yoziladi — ularni OpenServer'ning nginx'i o'zi beradi. Buni faqat birinchi marta va har yangilanishdan keyin qilish kerak.
 
-`D:\OSPanel\domains\LessonLoop.loc\deploy\build.bat` ni ikki marta bosing (yoki terminalda ishga tushiring). 1–2 daqiqa davom etadi, oxirida «Tayyor» chiqadi. Buni faqat birinchi marta va har yangilanishdan keyin qilish kerak.
-
-### 1.4. Brandmauer (firewall)
+### 1.5. Brandmauer (firewall)
 
 Telefon va doska kompyuteri serverga ulana olishi uchun portlar ochiladi. **Administrator** sifatida PowerShell oching (Pusk → PowerShell → o'ng tugma → «Запуск от имени администратора») va:
 
@@ -62,25 +72,24 @@ powershell -ExecutionPolicy Bypass -File D:\OSPanel\domains\LessonLoop.loc\deplo
 
 8000 (sayt va API) va 8080 (real vaqt — doska yangilanishi) portlariga ruxsat beriladi. Windows'da Wi-Fi tarmog'i **«Частная» (Private)** bo'lishi kerak: Параметры → Сеть и Интернет → Wi-Fi → tarmoq → «Частная сеть».
 
-### 1.5. Avtomatik ishga tushirish (ixtiyoriy)
+### 1.6. Avtomatik ishga tushirish (ixtiyoriy)
 
-Kompyuter yoqilganda LessonLoop o'zi ishga tushishi uchun:
-
-1. OpenServer sozlamalarida «Автозапуск» yoqilgan bo'lsin (MySQL kerak).
-2. Oddiy PowerShell'da:
+OpenServer 6 o'zi avtomatik yonadi (1.2, 3-qadam). Reverb va rejalashtiruvchi ham yonishi uchun oddiy PowerShell'da:
 
 ```bash
 powershell -ExecutionPolicy Bypass -File D:\OSPanel\domains\LessonLoop.loc\deploy\autostart.ps1
 ```
 
-Windows'ga kirilgandan 1 daqiqa o'tib server o'zi yonadi. O'chirish: o'sha buyruq oxiriga `-Remove` qo'shiladi.
+Windows'ga kirilgandan 1 daqiqa o'tib `start.bat` o'zi ishga tushadi. O'chirish: o'sha buyruq oxiriga `-Remove` qo'shiladi.
 
 ---
 
 ## 2. Serverni yoqish va o'chirish
 
-1. **OpenServer**'ni yoqing (bayroqcha yashil bo'lsin) — MySQL ishlashi kerak.
-2. `deploy\start.bat` ni ishga tushiring. Oyna ochiladi va manzillarni ko'rsatadi:
+Sayt qismini (API, `/admin/`, `/board/`, `/docs/`) **OpenServer 6** beradi. Ikki narsa veb-so'rov emas, ular uchun alohida oyna kerak: **Reverb** (doska real vaqtda yangilanishi, 8080) va **rejalashtiruvchi** (eski doska sessiyalarini tozalash, kunlik zaxira nusxa).
+
+1. **OpenServer 6** yoqilgan bo'lsin (Nginx, PHP-8.3, MySQL-8.4 — yashil).
+2. `deploy\start.bat` ni ishga tushiring. U bazani yangilaydi (migratsiyalar), Reverb va rejalashtiruvchini yoqadi va manzillarni ko'rsatadi:
 
 ```
 LessonLoop ishga tushdi:
@@ -90,12 +99,14 @@ LessonLoop ishga tushdi:
 Kuzatilmoqda. To'xtatish: Ctrl+C yoki deploy\stop.bat
 ```
 
-3. **Oynani yopmang** (kichraytirib qo'ying). U serverni kuzatib turadi: biror qism to'xtab qolsa, 5 soniya ichida o'zi qayta ishga tushiradi. Hodisalar `deploy\runtime\logs\supervisor.log` ga yoziladi.
-4. O'chirish: oynada **Ctrl+C** yoki `deploy\stop.bat`.
+3. **Oynani yopmang** (kichraytirib qo'ying). U Reverb va rejalashtiruvchini kuzatadi: biri to'xtasa, 5 soniyada qayta yoqadi. Hodisalar `deploy\runtime\logs\supervisor.log` da.
+4. O'chirish: oynada **Ctrl+C** yoki `deploy\stop.bat` (OpenServer 6 ishlayveradi).
 
-Server ishga tushganda nima bo'ladi: baza yangilanadi (migratsiyalar), 4 ta PHP ishchi jarayon, Reverb (real vaqt, 8080), rejalashtiruvchi (eski doska sessiyalarini tozalash, kunlik zaxira nusxa) va nginx (8000) yonadi.
+start.bat xabar berishi mumkin:
+- «MySQL ... ishlamayapti» — OpenServer 6 da MySQL-8.4 modulini yoqing;
+- «Port 8000 javob bermayapti» — Nginx va PHP-8.3 modullari hamda `lessonloop.loc` loyihasi yoqilganini tekshiring.
 
-Port 8000 band bo'lsa (masalan, ishlab chiqish uchun `php artisan serve` ochiq qolgan) — start.bat xabar beradi; o'sha dasturni yoping yoki `deploy\config.ps1` da `HttpPort` ni o'zgartiring.
+> OpenServer 6 bo'lmagan kompyuterda `deploy\config.ps1` da `WebServer = 'Own'` qo'yilsa, start.bat saytni ham o'zi beradi (alohida nginx + 4 ta php-cgi).
 
 ---
 
@@ -269,7 +280,7 @@ Ilova ichki tarmoqdagi `http://` serverga ulanishga sozlangan. Hozircha APK debu
 - Qo'lda nusxa olish:
 
 ```bash
-D:\php83\php.exe D:\OSPanel\domains\LessonLoop.loc\backend\artisan lessonloop:backup
+G:\OSPanel\modules\PHP-8.3\php.exe D:\OSPanel\domains\LessonLoop.loc\backend\artisan lessonloop:backup
 ```
 
 - Boshqa papka (masalan, flesh yoki boshqa disk): `backend\.env` ga `LESSONLOOP_BACKUP_DIR=E:\LessonLoop-backups`, muddat: `LESSONLOOP_BACKUP_DAYS=60`.
@@ -278,7 +289,7 @@ D:\php83\php.exe D:\OSPanel\domains\LessonLoop.loc\backend\artisan lessonloop:ba
 **Tiklash** (serverni to'xtatib, zip ichidagi `.sql` faylni chiqarib):
 
 ```bash
-D:\OSPanel\modules\database\MySQL-8.0-Win10\bin\mysql.exe -u root lessonloop < lessonloop-2026-10-20_1153.sql
+G:\OSPanel\modules\MySQL-8.4\bin\mysql.exe -h mysql-8.4 -u root lessonloop < lessonloop-2026-10-20_1153.sql
 ```
 
 (parol bo'lsa `-p` qo'shiladi). Keyin `deploy\start.bat`.
@@ -289,16 +300,17 @@ D:\OSPanel\modules\database\MySQL-8.0-Win10\bin\mysql.exe -u root lessonloop < l
 
 | Belgisi | Sabab va yechim |
 | --- | --- |
-| start.bat: «MySQL ishlamayapti» | OpenServer'ni yoqing, MySQL-8.0 yashil bo'lsin |
-| start.bat: «Port 8000 band» | `php artisan serve` yoki boshqa dastur ochiq — yoping yoki `deploy\config.ps1` da `HttpPort` |
-| start.bat: «dist yo'q» | `deploy\build.bat` ni ishga tushiring |
-| Telefon: «Serverga ulanib bo'lmadi» | Telefon va server bitta Wi-Fi'dami? Server manzili to'g'rimi (`http://IP:8000/api`)? Firewall (1.4)? Server kompyuterning brauzerida `http://IP:8000/admin/` ochiladimi? |
+| start.bat: «MySQL ... ishlamayapti» | OpenServer 6 da MySQL-8.4 modulini yoqing |
+| start.bat: «Port 8000 javob bermayapti» | OpenServer 6 da Nginx, PHP-8.3 va `lessonloop.loc` loyihasi yoqilganmi? |
+| Brauzerda «Как вы здесь оказались?» | So'rov kelgan manzil (IP) loyiha taxalluslarida yo'q — 1.2 dagi «Kompyuter IP'si o'zgarsa» |
+| `/admin/` ochiladi, lekin bo'sh yoki 404 | `deploy\build.bat` ni ishga tushiring |
+| Telefon: «Serverga ulanib bo'lmadi» | Telefon va server bitta Wi-Fi'dami? Server manzili to'g'rimi (`http://IP:8000/api`)? Firewall (1.5)? Server kompyuterning brauzerida `http://IP:8000/admin/` ochiladimi? |
 | Doska: yuqorida «Aloqa yo'q», qizil «Server bilan aloqa yo'q» | Doska kompyuteri serverga ulana olmayapti yoki 8080 port yopiq (firewall). Aloqa tiklanganda o'zi davom etadi |
 | Doska: «Pult uzildi» | Telefondan 45 soniya signal yo'q: ilova ochiqmi, telefon Wi-Fi'dami? Ilovani ochsangiz o'zi tiklanadi |
 | Doska kodi qabul qilinmaydi | Kod 5 daqiqa amal qiladi — doskadagi yangi kodni kiriting |
 | Telefonda «N ta baho yuborilmagan» | Internet/Wi-Fi'ni tekshiring; tiklanganda o'zi ketadi |
-| IP o'zgardi | Routerda doimiy IP bering; telefonda Kirish → «Server» yoki Sozlamalar → Server manzili |
-| Sahifa ochiladi, lekin xato | `deploy\runtime\logs\` (nginx, php, reverb) va `backend\storage\logs\laravel.log` |
+| IP o'zgardi | Routerda doimiy IP bering; `.osp\project.ini` taxalluslariga yangi IP va panelni qayta yoqish (1.2); telefonda Kirish → «Server» yoki Sozlamalar → Server manzili |
+| Sahifa ochiladi, lekin xato | `backend\storage\logs\laravel.log`, `G:\OSPanel\logs\` (Nginx, PHP-8.3, MySQL-8.4, general.log) va `deploy\runtime\logs\` (reverb, scheduler) |
 
 ---
 
@@ -312,7 +324,7 @@ git pull
 ```
 
 ```bash
-cd backend && D:\php83\composer.bat install && cd ..
+cd backend && G:\OSPanel\modules\PHP-8.3\composer.bat install && cd ..
 ```
 
 (Faqat server vazifasini bajaradigan, dasturlash qilinmaydigan kompyuterda `install --no-dev` — testlar va hujjat generatori o'rnatilmaydi.)
@@ -327,7 +339,7 @@ Keyin `deploy\stop.bat` → `deploy\build.bat` → `deploy\start.bat` (baza migr
 
 ```bash
 cd backend
-set DB_CONNECTION=sqlite& set DB_DATABASE=:memory:& D:\php83\php.exe artisan scribe:generate
+set DB_CONNECTION=sqlite& set DB_DATABASE=:memory:& G:\OSPanel\modules\PHP-8.3\php.exe artisan scribe:generate
 ```
 
 - **Loyiha rejasi va holati:** `PLAN.md`.
@@ -335,7 +347,7 @@ set DB_CONNECTION=sqlite& set DB_DATABASE=:memory:& D:\php83\php.exe artisan scr
 - **Testlar:**
 
 ```bash
-D:\php83\php.exe backend\artisan test --compact
+G:\OSPanel\modules\PHP-8.3\php.exe backend\artisan test --compact
 ```
 
 ```bash

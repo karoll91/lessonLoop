@@ -36,6 +36,8 @@ $PhpCgi  = Join-Path $LL.PhpDir 'php-cgi.exe'
 $Nginx   = Join-Path $LL.NginxDir 'nginx.exe'
 $Artisan = Join-Path $Backend 'artisan'
 $Prefix  = ($Runtime -replace '\\', '/') + '/'
+# In 'OSPanel6' mode Open Server Panel serves the web part; we run the rest.
+$OwnWeb  = $LL.WebServer -ne 'OSPanel6'
 
 New-Item -ItemType Directory -Force (Join-Path $Runtime 'logs'), (Join-Path $Runtime 'conf'), (Join-Path $Runtime 'temp') | Out-Null
 
@@ -45,10 +47,10 @@ function Write-Log([string]$Text) {
     Add-Content -Path (Join-Path $Runtime 'logs\supervisor.log') -Value $line -Encoding UTF8
 }
 
-function Test-Port([int]$Port) {
+function Test-Port([int]$Port, [string]$HostName = '127.0.0.1') {
     $client = New-Object System.Net.Sockets.TcpClient
     try {
-        $connect = $client.BeginConnect('127.0.0.1', $Port, $null, $null)
+        $connect = $client.BeginConnect($HostName, $Port, $null, $null)
         return $connect.AsyncWaitHandle.WaitOne(500) -and $client.Connected
     } catch {
         return $false
@@ -75,17 +77,25 @@ if (Test-Path (Join-Path $Runtime 'pids.json')) {
     & (Join-Path $PSScriptRoot 'stop.ps1') -Quiet
 }
 
-foreach ($tool in @($Php, $PhpCgi, $Nginx)) {
+$tools = if ($OwnWeb) { @($Php, $PhpCgi, $Nginx) } else { @($Php) }
+foreach ($tool in $tools) {
     if (-not (Test-Path $tool)) { throw "Topilmadi: $tool -- deploy\config.ps1 ni tekshiring." }
 }
 foreach ($app in @('admin', 'board')) {
-    if (-not (Test-Path (Join-Path $Root "$app\dist\index.html"))) { throw "$app\dist yo'q -- avval deploy\build.bat ni ishga tushiring." }
+    if (-not (Test-Path (Join-Path $Backend "public\$app\index.html"))) { throw "backend\public\$app yo'q -- avval deploy\build.bat ni ishga tushiring." }
 }
-if (-not (Test-Port 3306)) {
-    throw "MySQL (127.0.0.1:3306) ishlamayapti -- avval OpenServer'ni yoqing."
+$dbEnv = @{ DB_HOST = '127.0.0.1'; DB_PORT = '3306' }
+foreach ($line in Get-Content (Join-Path $Backend '.env')) {
+    if ($line -match '^\s*(DB_HOST|DB_PORT)\s*=\s*"?([^"#\s]*)"?') { $dbEnv[$Matches[1]] = $Matches[2] }
 }
-if (Test-Port $LL.HttpPort) {
+if (-not (Test-Port ([int]$dbEnv.DB_PORT) $dbEnv.DB_HOST)) {
+    throw "MySQL ($($dbEnv.DB_HOST):$($dbEnv.DB_PORT)) ishlamayapti -- avval OpenServer'ni yoqing (MySQL moduli)."
+}
+if ($OwnWeb -and (Test-Port $LL.HttpPort)) {
     throw "Port $($LL.HttpPort) band (masalan, 'php artisan serve' ishlab turibdi). Uni to'xtating yoki config.ps1 da HttpPort ni o'zgartiring."
+}
+if (-not $OwnWeb -and -not (Test-Port $LL.HttpPort)) {
+    throw "Port $($LL.HttpPort) javob bermayapti -- OpenServer 6 da lessonloop.loc loyihasi va Nginx, PHP-8.3 modullari yoqilganini tekshiring."
 }
 
 # ---------- Laravel ----------
@@ -104,8 +114,9 @@ try {
     Pop-Location
 }
 
-# ---------- nginx config ----------
+# ---------- nginx config (own web server only) ----------
 
+if ($OwnWeb) {
 $upstreams = (0..($LL.PhpWorkers - 1) | ForEach-Object { "        server 127.0.0.1:$($LL.PhpPortBase + $_);" }) -join "`n"
 $conf = (Get-Content (Join-Path $PSScriptRoot 'nginx\nginx.conf.template') -Raw).
     Replace('{{ROOT}}', ($Root -replace '\\', '/')).
@@ -121,6 +132,7 @@ if ($LASTEXITCODE -ne 0) {
     $check | ForEach-Object { Write-Host $_ }
     throw 'nginx konfiguratsiyasida xato'
 }
+}
 
 # ---------- processes ----------
 
@@ -128,7 +140,7 @@ if ($LASTEXITCODE -ne 0) {
 $env:PHP_FCGI_MAX_REQUESTS = '0'
 
 $services = @()
-for ($i = 0; $i -lt $LL.PhpWorkers; $i++) {
+for ($i = 0; $OwnWeb -and $i -lt $LL.PhpWorkers; $i++) {
     $services += @{
         Name = "php-$($i + 1)"
         File = $PhpCgi
@@ -164,7 +176,9 @@ function Start-Nginx {
 
 foreach ($service in $services) { Start-Service2 $service }
 Save-Pids
-Start-Nginx
+if ($OwnWeb) {
+    Start-Nginx
+}
 if (-not (Test-Port $LL.HttpPort)) { throw "nginx ishga tushmadi -- deploy\runtime\logs\error.log ni ko'ring" }
 # The adapter with a default gateway is the classroom network (not VirtualBox/Hyper-V).
 $ip = (Get-NetIPConfiguration -ErrorAction SilentlyContinue |
@@ -192,7 +206,7 @@ try {
                 Save-Pids
             }
         }
-        if (-not (Test-Port $LL.HttpPort)) {
+        if ($OwnWeb -and -not (Test-Port $LL.HttpPort)) {
             Write-Log "nginx javob bermayapti, qayta ishga tushirilmoqda"
             Start-Nginx
         }

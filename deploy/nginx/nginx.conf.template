@@ -1,8 +1,8 @@
 # LessonLoop classroom server. Rendered by deploy/start.ps1 into
 # deploy/runtime/conf/nginx.conf — edit this template, not the copy.
 #   :{{HTTP_PORT}}/api/…   Laravel API (PHP 8.3 FastCGI workers)
-#   :{{HTTP_PORT}}/admin/  admin panel (admin/dist)
-#   :{{HTTP_PORT}}/board/  classroom board (board/dist)
+#   :{{HTTP_PORT}}/admin/  admin panel (backend/public/admin)
+#   :{{HTTP_PORT}}/board/  classroom board (backend/public/board)
 
 worker_processes  1;
 error_log  logs/error.log warn;
@@ -35,33 +35,17 @@ http {
         root         "{{ROOT}}/backend/public";
         index        index.php;
 
-        location = / {
-            return 302 /admin/;
-        }
-
-        # Built files under assets/ have hashed names and never change.
-        location /admin/ {
-            alias "{{ROOT}}/admin/dist/";
-            try_files $uri /admin/index.html;
-
-            location /admin/assets/ {
-                expires 30d;
-            }
-        }
-
-        location /board/ {
-            alias "{{ROOT}}/board/dist/";
-            try_files $uri /board/index.html;
-
-            location /board/assets/ {
-                expires 30d;
-            }
-        }
-
-        # API, plus the API docs (backend/public/docs, php artisan scribe:generate).
+        # Everything lives in backend/public: admin/ and board/ (built by
+        # build.bat), docs/ (Scribe). The rest, and admin panel addresses after
+        # a reload, go to Laravel (routes/web.php, routes/api.php).
         location / {
-            index index.html;
+            index index.html index.php;
             try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        # Built files have hashed names and never change.
+        location ~ ^/(admin|board)/assets/ {
+            expires 30d;
         }
 
         location ~ \.php$ {

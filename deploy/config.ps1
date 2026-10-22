@@ -2,9 +2,14 @@
 # Used by start.ps1, stop.ps1 and build.ps1.
 
 $LL = @{
-    # PHP 8.3 (NTS build with php-cgi.exe). OpenServer 5 only has PHP <= 8.1.
-    PhpDir      = 'D:\php83'
-    # nginx that comes with OpenServer; any nginx for Windows works.
+    # Who serves the web part (API, /admin/, /board/):
+    #   'OSPanel6' -- Open Server Panel 6 (project .osp\project.ini); start.bat
+    #                 then runs only Reverb and the scheduler.
+    #   'Own'      -- the nginx + php-cgi below (for a computer without OSPanel 6).
+    WebServer   = 'OSPanel6'
+    # PHP 8.3 for artisan, Reverb and the scheduler (and php-cgi in 'Own' mode).
+    PhpDir      = 'G:\OSPanel\modules\PHP-8.3'
+    # 'Own' mode only: nginx for Windows.
     NginxDir    = 'D:\OSPanel\modules\http\Nginx_1.23'
     # Teachers open http://<this computer's IP>:<HttpPort>/admin/ and /board/;
     # the phone app uses http://<IP>:<HttpPort>/api.
