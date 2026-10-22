@@ -210,6 +210,7 @@ Telefon bo'lmasa yoki doska yonida turib boshqarish qulay bo'lsa:
    - **dars yo'q bo'lsa:** davom etayotgan darsni tanlash yoki yangi dars — kurs, mavzular, kelmaganlar, savollar soni → «Darsni boshlash»;
    - **dars paytida:** «Random — keyingi talaba», «To'g'ri javobni ko'rsatish/yashirish», «Boshqa talaba», «Javob bermadi», «Darsda yo'q», baho (0/40/60/75/90/100 yoki slayder → «N ball qo'yish»), test savolida talaba aytgan variant (A–D), «Darsni yakunlash»;
    - **ekran:** tanaffus, qora ekran, davom ettirish, ism/javob/bahoni ko'rsatish.
+     «Qora ekran» talabalardan hamma narsani yashiradi; panel tepasida «Qora ekran yoqilgan» qatori va **«Davom ettirish»** tugmasi qoladi (panel yig'ilgan bo'lsa ham). Klaviaturada **Esc** ham ekranni qaytaradi.
 3. «Yashirish ▾» — panelni yig'ish (savol to'liq ko'rinadi), «Panel ▴» — qayta ochish, «Chiqish» — o'qituvchi rejimidan chiqish.
 
 Panel to'g'ri javobni hech qachon o'zi ko'rsatmaydi: u faqat «To'g'ri javobni ko'rsatish» bosilganda doskada chiqadi. Telefon va doska bir vaqtda ishlatilishi mumkin: telefon dars ekrani ochiq bo'lsa, doskada qilingan o'zgarishlarni (baho, yangi talaba, yakun) 3 soniya ichida o'zi ko'rsatadi. Doska sahifasi qayta yuklansa, o'qituvchi rejimi saqlanib qoladi.

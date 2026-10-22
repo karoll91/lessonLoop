@@ -963,3 +963,16 @@
   color: var(--ink);
   font: inherit;
 }
+
+.t-suspended {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-weight: 700;
+  font-size: 1.0625rem;
+}

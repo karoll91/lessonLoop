@@ -94,6 +94,19 @@ describe('TeacherPanel', () => {
     expect(screen.getAllByText('Darsni yakunlash').length).toBeGreaterThan(1)
   })
 
+  it('on a black screen the way back is always there: with no lesson, with the panel folded, and with Esc', async () => {
+    const api = fakeApi()
+    panel(boardState({ screen: 'blackout', lesson: undefined }), api)
+
+    expect(screen.getByText("Qora ekran yoqilgan — talabalar hech narsani ko'rmaydi")).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Yashirish ▾'))
+    fireEvent.click(screen.getByText('Davom ettirish (Esc)'))
+    await waitFor(() => expect(api.command).toHaveBeenCalledWith(1, 'resume'))
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => expect(api.command).toHaveBeenCalledTimes(2))
+  })
+
   it('without a lesson on the board it starts a new one and puts it on the board', async () => {
     const api = fakeApi()
     panel(boardState({ screen: 'lobby', lesson: undefined }), api)

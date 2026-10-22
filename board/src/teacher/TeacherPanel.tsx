@@ -30,6 +30,9 @@ export function TeacherPanel({ state, api, name, onSignOut }: PanelProps) {
 
   const lessonOnBoard = state.lesson !== undefined && state.screen !== 'summary'
   const showSetup = setup || !lessonOnBoard
+  // Blackout and pause hide everything from the class; the way back must
+  // always be on screen, with or without a lesson, open or folded.
+  const suspended = state.screen === 'blackout' || state.screen === 'pause'
 
   /** Run one step; flow errors become a message (and «finish» when nothing is left). */
   const run = useCallback(async (action: () => Promise<void>) => {
@@ -45,6 +48,22 @@ export function TeacherPanel({ state, api, name, onSignOut }: PanelProps) {
       setBusy(false)
     }
   }, [])
+
+  const resume = () => run(async () => void (await api.command(state.board_id, 'resume')))
+
+  // Esc brings the screen back as well (teacher mode only).
+  useEffect(() => {
+    if (!suspended) {
+      return
+    }
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        void resume()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   const finish = () =>
     run(async () => {
@@ -72,9 +91,18 @@ export function TeacherPanel({ state, api, name, onSignOut }: PanelProps) {
         </button>
       </header>
 
+      {suspended && (
+        <div className="t-suspended" role="status">
+          <span>{state.screen === 'blackout' ? "Qora ekran yoqilgan — talabalar hech narsani ko'rmaydi" : 'Tanaffus — savol va javoblar yashirilgan'}</span>
+          {/* Never disabled: getting the screen back must not wait for anything. */}
+          <button type="button" className="t-btn primary" onClick={resume}>
+            Davom ettirish (Esc)
+          </button>
+        </div>
+      )}
+
       {open && (
-        <div className="t-body">
-          {showSetup ? (
+        <div className="t-body">          {showSetup ? (
             <LessonSetup api={api} boardId={state.board_id} busy={busy} run={run} onDone={() => setSetup(false)} onCancel={lessonOnBoard ? () => setSetup(false) : undefined} />
           ) : (
             <LessonControls state={state} api={api} busy={busy} run={run} onFinish={finish} />
@@ -162,13 +190,7 @@ function LessonControls({ state, api, busy, run, onFinish }: { state: BoardState
         </span>
       </div>
 
-      {suspended ? (
-        <div className="t-row">
-          <Button primary disabled={busy} onClick={() => run(async () => void (await command('resume')))}>
-            Davom ettirish
-          </Button>
-        </div>
-      ) : asking ? (
+      {suspended ? null : asking ? (
         <>
           <div className="t-row">
             <Button disabled={busy} onClick={() => run(async () => void (await command(state.screen === 'answer' ? 'hide_answer' : 'reveal_answer')))}>
