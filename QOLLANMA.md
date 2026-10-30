@@ -22,7 +22,7 @@ Server kompyuterda (hozirgi kompyuterda hammasi bor):
 
 | Dastur | Joyi | Izoh |
 | --- | --- | --- |
-| Open Server Panel 6 (6.4.6) | `G:\OSPanel` | Modullar: **Nginx**, **PHP-8.3**, **MySQL-8.4** |
+| Open Server Panel 6 (6.4.6) | `G:\OSPanel` | Modul: **MySQL-8.4** (Nginx, PHP-8.3 fayllari start.bat uchun; modullari o'chiq) |
 | Node.js | `C:\Program Files\nodejs` | Admin panel va doskani yig'ish uchun |
 | Loyiha | `D:\OSPanel\domains\LessonLoop.loc` | Git'dan |
 
@@ -37,11 +37,16 @@ OpenServer 6 loyihani `G:\OSPanel\home\lessonloop.loc` orqali ko'radi — bu rep
 
 ### 1.2. OpenServer 6 sozlamasi
 
-1. Panel ikonasi (soat yonida) → chap tugma → **Модули** → **Nginx**, **PHP-8.3**, **MySQL-8.4** → «Включить».
-2. **Проекты** ro'yxatida `lessonloop.loc` bo'lishi kerak. Ko'rinmasa: `deploy\osp6-link.bat` ni ishga tushiring va panelni qayta yoqing (Выход → qayta ochish).
-3. Panel sozlamalarida «Автозапуск» va modullarni avtomatik yoqishni belgilang — shunda Windows yoqilganda hammasi o'zi ishga tushadi.
+Sayt ikki usulda beriladi — `deploy\config.ps1` dagi `WebServer`:
 
-**Kompyuter IP'si o'zgarsa:** `.osp\project.ini` dagi `server_aliases` qatoriga yangi IP yoziladi (masalan, `server_aliases = localhost 127.0.0.1 karoll-pc 192.168.31.94`) va **panel to'liq qayta yoqiladi** (Выход → qayta ochish; faqat Nginx'ni qayta yoqish yetmaydi). Aks holda IP orqali kelgan so'rovlarni panelning standart sahifasi («Как вы здесь оказались?») ushlab qoladi. Eng yaxshisi — routerda server kompyuterga doimiy IP berish (DHCP reservation).
+- **`'Own'` (hozir shu yoqilgan, tavsiya etiladi).** Saytni `start.bat` o'zi beradi: OpenServer'ning nginx.exe va PHP 8.3 fayllari bilan, lekin o'zining sozlamasi bilan (`server_name _`). Sayt kompyuterning **har qanday IP'sida** ochiladi, shuning uchun tashkilot tarmog'ida IP o'zgarsa ham «Как вы здесь оказались?» chiqmaydi. OpenServer'dan faqat **MySQL-8.4** ishlatiladi.
+  1. Panel → **Модули**: **MySQL-8.4** — yoqilgan; **Nginx** va **PHP-8.3** — **o'chirilgan** (aks holda ular 8000-portni egallaydi va start.bat «Port 8000 band» deydi).
+  2. `.osp\project.ini` da `project_enabled = off` turadi — panel loyihani o'zi bermaydi.
+- **`'OSPanel6'`.** Saytni OpenServer beradi (Nginx, PHP-8.3 modullari yoqiladi, `project_enabled = off` qatori o'chiriladi). Bu usulda sayt faqat `.osp\project.ini` dagi `server_aliases` ro'yxatidagi manzillarda ochiladi: IP o'zgarsa, yangi IP shu qatorga yoziladi va **panel to'liq qayta yoqiladi** (Выход → qayta ochish), aks holda «Как вы здесь оказались?» chiqadi.
+
+Panel sozlamalarida «Автозапуск» va modullarni avtomatik yoqishni belgilang — Windows yoqilganda MySQL o'zi ishga tushadi.
+
+**IP o'zgarsa (`'Own'` usulida):** sayt yangi IP'da ham ishlayveradi, faqat telefonlarda server manzilini yangilash kerak. Yangi manzilni `start.bat` oynasi ko'rsatadi (yoki `cmd` → `ipconfig`). Doska kompyuterida brauzerni yangi manzilga oching. IP umuman o'zgarmasligi uchun eng yaxshisi — tarmoq adminidan server kompyuterga doimiy IP (DHCP reservation) yoki ichki domen nomi (masalan, `lessonloop.tashkilot.uz`) so'rash: `'Own'` usuli istalgan nom bilan ham ishlaydi.
 
 ### 1.3. Sozlamalar (`backend\.env`)
 
@@ -86,10 +91,10 @@ Windows'ga kirilgandan 1 daqiqa o'tib `start.bat` o'zi ishga tushadi. O'chirish:
 
 ## 2. Serverni yoqish va o'chirish
 
-Sayt qismini (API, `/admin/`, `/board/`, `/docs/`) **OpenServer 6** beradi. Ikki narsa veb-so'rov emas, ular uchun alohida oyna kerak: **Reverb** (doska real vaqtda yangilanishi; ichkarida 8080 da ishlaydi, doska unga 8000-port orqali ulanadi) va **rejalashtiruvchi** (eski doska sessiyalarini tozalash, kunlik zaxira nusxa).
+`start.bat` (`'Own'` usulida) hammasini o'zi yoqadi: sayt (API, `/admin/`, `/board/`, `/docs/` — nginx + 4 ta php-cgi, port 8000), **Reverb** (doska real vaqtda yangilanishi; ichkarida 8080 da ishlaydi, doska unga 8000-port orqali ulanadi) va **rejalashtiruvchi** (eski doska sessiyalarini tozalash, kunlik zaxira nusxa).
 
-1. **OpenServer 6** yoqilgan bo'lsin (Nginx, PHP-8.3, MySQL-8.4 — yashil).
-2. `deploy\start.bat` ni ishga tushiring. U bazani yangilaydi (migratsiyalar), Reverb va rejalashtiruvchini yoqadi va manzillarni ko'rsatadi:
+1. **OpenServer 6** da MySQL-8.4 yoqilgan bo'lsin (Nginx va PHP-8.3 — o'chiq, 1.2 ga qarang).
+2. `deploy\start.bat` ni ishga tushiring. U bazani yangilaydi (migratsiyalar), hammasini yoqadi va manzillarni ko'rsatadi:
 
 ```
 LessonLoop ishga tushdi:
@@ -99,14 +104,12 @@ LessonLoop ishga tushdi:
 Kuzatilmoqda. To'xtatish: Ctrl+C yoki deploy\stop.bat
 ```
 
-3. **Oynani yopmang** (kichraytirib qo'ying). U Reverb va rejalashtiruvchini kuzatadi: biri to'xtasa, 5 soniyada qayta yoqadi. Hodisalar `deploy\runtime\logs\supervisor.log` da.
-4. O'chirish: oynada **Ctrl+C** yoki `deploy\stop.bat` (OpenServer 6 ishlayveradi).
+3. **Oynani yopmang** (kichraytirib qo'ying). U nginx, php-cgi, Reverb va rejalashtiruvchini kuzatadi: biri to'xtasa, 5 soniyada qayta yoqadi. Hodisalar `deploy\runtime\logs\supervisor.log` da.
+4. O'chirish: oynada **Ctrl+C** yoki `deploy\stop.bat` (OpenServer'ning MySQL'i ishlayveradi).
 
 start.bat xabar berishi mumkin:
 - «MySQL ... ishlamayapti» — OpenServer 6 da MySQL-8.4 modulini yoqing;
-- «Port 8000 javob bermayapti» — Nginx va PHP-8.3 modullari hamda `lessonloop.loc` loyihasi yoqilganini tekshiring.
-
-> OpenServer 6 bo'lmagan kompyuterda `deploy\config.ps1` da `WebServer = 'Own'` qo'yilsa, start.bat saytni ham o'zi beradi (alohida nginx + 4 ta php-cgi).
+- «Port 8000 band» — OpenServer'ning Nginx (va PHP-8.3) modulini o'chiring, yoki eski start.bat oynasi ochiq qolgan — `deploy\stop.bat`.
 
 ---
 
@@ -318,7 +321,7 @@ G:\OSPanel\modules\MySQL-8.4\bin\mysql.exe -h mysql-8.4 -u root lessonloop < les
 | --- | --- |
 | start.bat: «MySQL ... ishlamayapti» | OpenServer 6 da MySQL-8.4 modulini yoqing |
 | start.bat: «Port 8000 javob bermayapti» | OpenServer 6 da Nginx, PHP-8.3 va `lessonloop.loc` loyihasi yoqilganmi? |
-| Brauzerda «Как вы здесь оказались?» | So'rov kelgan manzil (IP) loyiha taxalluslarida yo'q — 1.2 dagi «Kompyuter IP'si o'zgarsa» |
+| Brauzerda «Как вы здесь оказались?» | Saytni OpenServer'ning nginx'i beryapti (`'OSPanel6'` usuli yoki Nginx moduli yoqilib qolgan). Panelda Nginx va PHP-8.3 modullarini o'chiring, `deploy\stop.bat`, keyin `deploy\start.bat` (1.2) |
 | `/admin/` ochiladi, lekin bo'sh yoki 404 | `deploy\build.bat` ni ishga tushiring |
 | Telefon: «Serverga ulanib bo'lmadi» | Telefon va server bitta Wi-Fi'dami? Server manzili to'g'rimi (`http://IP:8000/api`)? Firewall (1.5)? Server kompyuterning brauzerida `http://IP:8000/admin/` ochiladimi? |
 | Doska: yuqorida «Aloqa yo'q», burchakda «Server bilan aloqa yo'q» | Doska kompyuteri serverga (8000-port) ulana olmayapti. Aloqa tiklanganda o'zi davom etadi. Agar faqat real vaqt kanali (Reverb) ishlamasa, doska ogohlantirishsiz har 3 soniyada yangilanadi — `deploy\start.bat` ishlayotganini tekshiring |

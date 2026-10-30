@@ -3,14 +3,18 @@
 
 $LL = @{
     # Who serves the web part (API, /admin/, /board/):
-    #   'OSPanel6' -- Open Server Panel 6 (project .osp\project.ini); start.bat
-    #                 then runs only Reverb and the scheduler.
-    #   'Own'      -- the nginx + php-cgi below (for a computer without OSPanel 6).
-    WebServer   = 'OSPanel6'
-    # PHP 8.3 for artisan, Reverb and the scheduler (and php-cgi in 'Own' mode).
+    #   'Own'      -- the nginx + php-cgi below. Answers on ANY address of this
+    #                 computer (IP, name), so a changing IP (DHCP) never shows
+    #                 OpenServer's «Как вы здесь оказались?» page. OpenServer is
+    #                 then used only for MySQL: keep only MySQL-8.4 on and turn
+    #                 its Nginx and PHP-8.3 modules off (they would take port 8000).
+    #   'OSPanel6' -- Open Server Panel 6 serves it (project .osp\project.ini);
+    #                 works only for the addresses listed in server_aliases.
+    WebServer   = 'Own'
+    # PHP 8.3 for artisan, Reverb, the scheduler and php-cgi.
     PhpDir      = 'G:\OSPanel\modules\PHP-8.3'
-    # 'Own' mode only: nginx for Windows.
-    NginxDir    = 'D:\OSPanel\modules\http\Nginx_1.23'
+    # 'Own' mode: nginx for Windows (OpenServer 6's own binary works).
+    NginxDir    = 'G:\OSPanel\modules\Nginx'
     # Teachers open http://<this computer's IP>:<HttpPort>/admin/ and /board/;
     # the phone app uses http://<IP>:<HttpPort>/api.
     HttpPort    = 8000
