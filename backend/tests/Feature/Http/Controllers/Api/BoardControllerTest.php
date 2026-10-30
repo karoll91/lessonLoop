@@ -136,6 +136,22 @@ class BoardControllerTest extends TestCase
             && $event->broadcastOn()[0]->name === 'board.'.$board->token);
     }
 
+    public function test_teacher_mode_shows_a_code_and_the_teachers_phone_joins_without_stopping_the_lesson(): void
+    {
+        [, $board] = $this->pairedBoardWithLesson();
+        $this->command($board, 'draw');
+        $lessonId = $board->fresh()->lesson_id;
+
+        $code = $this->postJson(route('boards.takeover', $board))->assertOk()->json('pair_code');
+        $this->getJson(route('boards.state', $board->token))->assertJsonPath('state.pair_code', $code);
+
+        $this->postJson(route('boards.pair'), ['code' => $code])
+            ->assertOk()
+            ->assertJsonPath('state.screen', BoardScreen::Drawing->value)
+            ->assertJsonPath('state.lesson.id', $lessonId)
+            ->assertJsonMissingPath('state.pair_code');
+    }
+
     public function test_returns_422_for_an_expired_pair_code(): void
     {
         $board = BoardSession::factory()->create(['pair_code_expires_at' => now()->subSecond()]);

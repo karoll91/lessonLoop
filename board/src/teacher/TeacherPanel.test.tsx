@@ -23,6 +23,7 @@ function fakeApi(overrides: Partial<Record<keyof TeacherApi, unknown>> = {}): Te
     grade: vi.fn().mockResolvedValue({}),
     skip: vi.fn().mockResolvedValue({}),
     rules: vi.fn().mockResolvedValue({ data: { default_question_count: 6 } }),
+    phoneCode: vi.fn().mockResolvedValue('482913'),
     ...overrides,
   }
   return api as unknown as TeacherApi
@@ -37,6 +38,22 @@ afterEach(() => {
 })
 
 describe('TeacherPanel', () => {
+  it('shows a code for the phone mid-lesson and closes it once the phone has paired', async () => {
+    const api = fakeApi()
+    const lesson = { screen: 'question' as const, current: { student: { full_name: 'Madina Yusupova' }, question: openQuestion } }
+    const view = panel(boardState(lesson), api)
+
+    fireEvent.click(screen.getByText('Telefonni ulash'))
+    expect(await screen.findByTestId('phone-code')).toHaveTextContent('482 913')
+    expect(api.phoneCode).toHaveBeenCalledWith(1)
+
+    // The board's state carries the code, then loses it when the phone pairs.
+    view.rerender(<TeacherPanel state={boardState({ ...lesson, pair_code: '482913' })} api={api} name="Shoxrux" onSignOut={() => {}} />)
+    expect(screen.getByTestId('phone-code')).toBeInTheDocument()
+    view.rerender(<TeacherPanel state={boardState(lesson)} api={api} name="Shoxrux" onSignOut={() => {}} />)
+    await waitFor(() => expect(screen.queryByTestId('phone-code')).not.toBeInTheDocument())
+  })
+
   it('Random draws a student and then puts the question on the board', async () => {
     vi.useFakeTimers()
     const api = fakeApi()

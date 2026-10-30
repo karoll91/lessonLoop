@@ -57,6 +57,8 @@ class BoardRemote
     /**
      * Pair the board that shows the given code with the teacher. A board that
      * another teacher controls is taken over and that teacher is notified.
+     * The teacher who already runs it (teacher mode on the board) only adds
+     * the phone: the lesson stays where it is.
      */
     public function pair(string $code, User $teacher): BoardSession
     {
@@ -67,6 +69,10 @@ class BoardRemote
 
         if ($board === null) {
             throw ValidationException::withMessages(['code' => 'Kod noto\'g\'ri yoki muddati tugagan.']);
+        }
+
+        if ($board->controller_id === $teacher->id) {
+            return $this->takeControl($board, $teacher, []);
         }
 
         return $this->takeControl($board, $teacher, ['screen' => BoardScreen::Lobby]);
@@ -124,6 +130,8 @@ class BoardRemote
     {
         $this->assignPairCode($board);
         $board->save();
+        // Teacher mode shows the code on the board; it disappears once paired.
+        $this->broadcast($board);
 
         return $board;
     }

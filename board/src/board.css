@@ -954,6 +954,30 @@
   font-size: 1.375rem;
 }
 
+.t-phone {
+  width: min(30rem, calc(100% - 2rem));
+}
+
+.t-phone-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.t-phone-code .qr {
+  width: 14rem;
+  height: 14rem;
+  padding: 1rem;
+}
+
+.t-code {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
 .t-input {
   min-height: 2.75rem;
   padding: 0 0.75rem;

@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { QrCode } from '../components/QrCode'
 import { config } from '../config'
+import { clock } from '../format'
+import { useNow } from '../hooks'
 import type { BoardState } from '../types'
 import { TeacherApiError, type Course, type Lesson, type Student, type TeacherApi, type Topic } from './api'
 
@@ -27,6 +30,19 @@ export function TeacherPanel({ state, api, name, onSignOut }: PanelProps) {
   const [message, setMessage] = useState<string | null>(null)
   const [canFinish, setCanFinish] = useState(false)
   const [setup, setSetup] = useState(false)
+  const [phoneCode, setPhoneCode] = useState<string | null>(null)
+
+  // The phone paired: the server cleared the code, so the window goes away.
+  const codeShown = useRef(false)
+  useEffect(() => {
+    if (phoneCode === null) {
+      codeShown.current = false
+    } else if (state.pair_code === phoneCode) {
+      codeShown.current = true
+    } else if (codeShown.current && !state.pair_code) {
+      setPhoneCode(null)
+    }
+  }, [phoneCode, state.pair_code])
 
   const lessonOnBoard = state.lesson !== undefined && state.screen !== 'summary'
   const showSetup = setup || !lessonOnBoard
@@ -83,6 +99,9 @@ export function TeacherPanel({ state, api, name, onSignOut }: PanelProps) {
             Boshqa dars
           </button>
         )}
+        <button type="button" className="t-btn" disabled={busy} onClick={() => run(async () => setPhoneCode(await api.phoneCode(state.board_id)))}>
+          Telefonni ulash
+        </button>
         <button type="button" className="t-btn" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
           {open ? 'Yashirish ▾' : 'Panel ▴'}
         </button>
@@ -119,11 +138,52 @@ export function TeacherPanel({ state, api, name, onSignOut }: PanelProps) {
           )}
         </div>
       )}
+
+      {phoneCode !== null && (
+        <PhoneCode
+          code={phoneCode}
+          expiresAt={state.pair_code === phoneCode ? state.pair_code_expires_at : undefined}
+          busy={busy}
+          onRenew={() => run(async () => setPhoneCode(await api.phoneCode(state.board_id)))}
+          onClose={() => setPhoneCode(null)}
+        />
+      )}
     </section>
   )
 }
 
-type Run = (action: () => Promise<void>) => Promise<void>
+/** The teacher's phone joins a lesson already running in teacher mode. */
+function PhoneCode({ code, expiresAt, busy, onRenew, onClose }: { code: string; expiresAt?: string | null; busy: boolean; onRenew: () => void; onClose: () => void }) {
+  const now = useNow()
+  const secondsLeft = expiresAt ? (Date.parse(expiresAt) - now) / 1000 : null
+  const expired = secondsLeft !== null && secondsLeft <= 0
+
+  return (
+    <div className="t-modal" role="dialog" aria-modal="true" aria-label="Telefonni ulash">
+      <div className="t-login t-phone">
+        <h2>Telefonni ulash</h2>
+        <p className="t-label">Telefonda LessonLoop → «Doskaga ulash» → QR'ni skanerlang yoki kodni kiriting. Dars shu joyidan davom etadi.</p>
+        <div className="t-phone-code">
+          <QrCode value={`lessonloop://pair?code=${code}`} label={`Ulanish kodi ${code}`} />
+          <span className="t-code" data-testid="phone-code">
+            {code.slice(0, 3)} {code.slice(3)}
+          </span>
+        </div>
+        {secondsLeft !== null && <span className="t-label">{expired ? 'Kod muddati tugadi' : `Kod ${clock(secondsLeft)} amal qiladi`}</span>}
+        <div className="t-row">
+          <button type="button" className="t-btn" disabled={busy} onClick={onRenew}>
+            Yangi kod
+          </button>
+          <button type="button" className="t-btn" onClick={onClose}>
+            Yopish
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type Run =(action: () => Promise<void>) => Promise<void>
 
 /* ---------- running lesson ---------- */
 

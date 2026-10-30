@@ -131,6 +131,8 @@ export const teacherApi = (token: string) => ({
   heartbeat: (boardId: number) => call<unknown>(token, 'POST', `/boards/${boardId}/heartbeat`),
   command: (boardId: number, command: string) => call<{ state: BoardState; answer_id: number | null }>(token, 'POST', `/boards/${boardId}/commands`, { command }),
   attach: (boardId: number, lessonId: number) => call<{ state: BoardState }>(token, 'POST', `/boards/${boardId}/lesson`, { lesson_id: lessonId }),
+  /** A code the teacher's phone pairs with, mid-lesson; the lesson stays on the board. */
+  phoneCode: async (boardId: number) => (await call<{ pair_code: string }>(token, 'POST', `/boards/${boardId}/takeover-code`)).pair_code,
   options: (boardId: number, options: Record<string, boolean>) => call<{ state: BoardState }>(token, 'PATCH', `/boards/${boardId}/options`, options),
   courses: async () => (await call<{ data: Course[] }>(token, 'GET', '/courses?per_page=100')).data,
   topics: async (subjectId: number) => (await call<{ data: Topic[] }>(token, 'GET', `/subjects/${subjectId}/topics`)).data,
