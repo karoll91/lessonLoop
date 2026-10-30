@@ -91,7 +91,7 @@ class SettingsScreen extends ConsumerWidget {
                 leading: const Icon(Icons.dns_outlined),
                 title: Text(tr('Server manzili')),
                 subtitle: Text(settings.serverUrl),
-                onTap: () => showServerDialog(context, ref),
+                onTap: () => showServerDialog(context),
               ),
               ListTile(
                 leading: const Icon(Icons.cast_outlined),

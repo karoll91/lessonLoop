@@ -89,7 +89,7 @@ class OfflineStart extends ConsumerWidget {
             action: tr('Qayta urinish'),
             onAction: () => ref.invalidate(authProvider),
           ),
-          TextButton(onPressed: () => showServerDialog(context, ref), child: Text(tr("Server manzilini o'zgartirish"))),
+          TextButton(onPressed: () => showServerDialog(context), child: Text(tr("Server manzilini o'zgartirish"))),
         ],
       ),
     );

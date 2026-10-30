@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,26 +25,60 @@ class LogoMark extends StatelessWidget {
   }
 }
 
-/// M1 · 1 — shown while the saved token is checked.
-class SplashScreen extends StatelessWidget {
+/// M1 · 1 — shown while the saved token is checked. When that takes long
+/// (the address changed with the network) the address and a way to change
+/// it appear instead of a bare spinner.
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
+
+  static const slowAfter = Duration(seconds: 3);
+
+  @override
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  late final Timer _timer;
+  bool _slow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(SplashScreen.slowAfter, () => setState(() => _slow = true));
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const LogoMark(size: 88),
-            const SizedBox(height: 18),
-            const Text('LessonLoop', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
-            const SizedBox(height: 6),
-            Text(tr('Har dars — takrorlash'), style: TextStyle(color: c.ink2)),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const LogoMark(size: 88),
+              const SizedBox(height: 18),
+              const Text('LessonLoop', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+              const SizedBox(height: 6),
+              Text(tr('Har dars — takrorlash'), style: TextStyle(color: c.ink2)),
+              const SizedBox(height: 40),
+              const CircularProgressIndicator(),
+              if (_slow) ...[
+                const SizedBox(height: 20),
+                Text(tr('Ulanmoqda…'), style: TextStyle(color: c.ink2)),
+                const SizedBox(height: 4),
+                Text(ref.watch(settingsProvider).serverUrl, textAlign: TextAlign.center, style: TextStyle(color: c.ink2, fontSize: 13)),
+                TextButton(onPressed: () => showServerDialog(context), child: Text(tr("Server manzilini o'zgartirish"))),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -329,7 +365,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: 12),
             Center(
               child: TextButton.icon(
-                onPressed: _busy ? null : () => showServerDialog(context, ref),
+                onPressed: _busy ? null : () => showServerDialog(context),
                 icon: const Icon(Icons.dns_outlined, size: 18),
                 label: Text(tr('Server: {url}', {'url': ref.watch(settingsProvider).serverUrl}), overflow: TextOverflow.ellipsis),
               ),
@@ -342,21 +378,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 }
 
 /// The API address: the teacher's computer on the same Wi-Fi.
-Future<void> showServerDialog(BuildContext context, WidgetRef ref) async {
-  final controller = TextEditingController(text: ref.read(settingsProvider).serverUrl);
+///
+/// The screen that opens it is replaced once the address is saved, so the
+/// providers are reached through the container, not through that screen.
+Future<void> showServerDialog(BuildContext context) async {
+  final container = ProviderScope.containerOf(context, listen: false);
   final value = await showDialog<String>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => _ServerDialog(initial: container.read(settingsProvider).serverUrl),
+  );
+  if (value != null && value.trim().isNotEmpty) {
+    await container.read(settingsProvider.notifier).setServerUrl(value);
+    container.invalidate(authProvider);
+  }
+}
+
+/// Owns its text controller: the field is still on screen while the dialog
+/// closes, so the controller may only go away together with the dialog.
+class _ServerDialog extends StatefulWidget {
+  const _ServerDialog({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_ServerDialog> createState() => _ServerDialogState();
+}
+
+class _ServerDialogState extends State<_ServerDialog> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
       title: Text(tr('Server manzili')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
-            controller: controller,
+            controller: _controller,
             autofocus: true,
             keyboardType: TextInputType.url,
             decoration: const InputDecoration(hintText: 'http://192.168.1.10:8000/api'),
+            onSubmitted: (value) => Navigator.pop(context, value),
           ),
           const SizedBox(height: 8),
           Text(tr("Kompyuter IP manzili va port. Telefon va kompyuter bitta Wi-Fi'da bo'lishi kerak."), style: Theme.of(context).textTheme.bodySmall),
@@ -364,14 +434,9 @@ Future<void> showServerDialog(BuildContext context, WidgetRef ref) async {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Bekor'))),
-        FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: Text(tr('Saqlash'))),
+        FilledButton(onPressed: () => Navigator.pop(context, _controller.text), child: Text(tr('Saqlash'))),
       ],
-    ),
-  );
-  controller.dispose();
-  if (value != null && value.trim().isNotEmpty) {
-    await ref.read(settingsProvider.notifier).setServerUrl(value);
-    ref.invalidate(authProvider);
+    );
   }
 }
 

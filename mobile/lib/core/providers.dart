@@ -110,13 +110,21 @@ final apiProvider = Provider<ApiClient>((ref) {
 });
 
 class AuthController extends AsyncNotifier<User?> {
+  /// The start screen waits at most this long: after a network change the
+  /// saved address may lead nowhere, and the «server unreachable» screen is
+  /// where the teacher fixes it.
+  static const startTimeout = Duration(seconds: 10);
+
   @override
   Future<User?> build() async {
     final token = ref.watch(tokenProvider);
     if (token == null) {
       return null;
     }
-    final response = await ref.read(apiProvider).get('/me');
+    final response = await ref
+        .read(apiProvider)
+        .get('/me')
+        .timeout(startTimeout, onTimeout: () => throw ApiException(0, "Serverga ulanib bo'lmadi. Internet yoki server manzilini tekshiring."));
     return User.fromJson(response['user'] as Json);
   }
 
@@ -138,7 +146,9 @@ class AuthController extends AsyncNotifier<User?> {
   void updateUser(User user) => state = AsyncData(user);
 }
 
-final authProvider = AsyncNotifierProvider<AuthController, User?>(AuthController.new);
+/// Not retried automatically: Riverpod would keep the start screen loading
+/// through its retries, hiding the «server unreachable» screen for minutes.
+final authProvider = AsyncNotifierProvider<AuthController, User?>(AuthController.new, retry: (_, _) => null);
 
 /* ---------- Shared data ---------- */
 
