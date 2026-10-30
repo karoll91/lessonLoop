@@ -24,9 +24,9 @@ Server kompyuterda (hozirgi kompyuterda hammasi bor):
 | --- | --- | --- |
 | Open Server Panel 6 (6.4.6) | `G:\OSPanel` | Modul: **MySQL-8.4** (Nginx, PHP-8.3 fayllari start.bat uchun; modullari o'chiq) |
 | Node.js | `C:\Program Files\nodejs` | Admin panel va doskani yig'ish uchun |
-| Loyiha | `D:\OSPanel\domains\LessonLoop.loc` | Git'dan |
+| Loyiha | `G:\OSPanel\home\LessonLoop.loc` | Git'dan (github.com/karoll91/lessonLoop) |
 
-OpenServer 6 loyihani `G:\OSPanel\home\lessonloop.loc` orqali ko'radi — bu repo papkasiga bog'lama (junction), kod `D:\` da qoladi. Bog'lamani `deploy\osp6-link.bat` yaratadi (bir marta). Loyiha sozlamalari repo ichidagi `.osp\` papkasida:
+Loyiha to'g'ridan-to'g'ri OpenServer 6 ning `home` papkasida turadi: `G:\OSPanel\home\LessonLoop.loc` — barcha buyruqlar shu papkadan ishlatiladi (bog'lama kerak emas; `deploy\osp6-link.bat` faqat loyiha boshqa diskda turganda kerak). Eski nusxa `D:\OSPanel\domains\LessonLoop.loc` endi ishlatilmaydi. OpenServer uchun sozlamalar `.osp\` papkasida:
 
 - `.osp\project.ini` — PHP-8.3, Nginx, port **8000**, barcha tarmoq manzillarida tinglash, ochiq papka `backend\public`, taxalluslar (`server_aliases`);
 - `.osp\nginx\lessonloop.loc.conf` — Laravel uchun nginx qoidalari.
@@ -72,7 +72,7 @@ Server IP manzilini bilish: `deploy\start.bat` ishga tushganda o'zi ko'rsatadi, 
 Telefon va doska kompyuteri serverga ulana olishi uchun portlar ochiladi. **Administrator** sifatida PowerShell oching (Pusk → PowerShell → o'ng tugma → «Запуск от имени администратора») va:
 
 ```bash
-powershell -ExecutionPolicy Bypass -File D:\OSPanel\domains\LessonLoop.loc\deploy\firewall.ps1
+powershell -ExecutionPolicy Bypass -File G:\OSPanel\home\LessonLoop.loc\deploy\firewall.ps1
 ```
 
 8000-portga (sayt, API va doskaning real vaqt ulanishi — u ham shu port orqali o'tadi) ruxsat beriladi; 8080 ham ochiladi, lekin endi tarmoqdan kerak emas. Windows'da Wi-Fi tarmog'i **«Частная» (Private)** bo'lishi kerak: Параметры → Сеть и Интернет → Wi-Fi → tarmoq → «Частная сеть».
@@ -82,7 +82,7 @@ powershell -ExecutionPolicy Bypass -File D:\OSPanel\domains\LessonLoop.loc\deplo
 OpenServer 6 o'zi avtomatik yonadi (1.2, 3-qadam). Reverb va rejalashtiruvchi ham yonishi uchun oddiy PowerShell'da:
 
 ```bash
-powershell -ExecutionPolicy Bypass -File D:\OSPanel\domains\LessonLoop.loc\deploy\autostart.ps1
+powershell -ExecutionPolicy Bypass -File G:\OSPanel\home\LessonLoop.loc\deploy\autostart.ps1
 ```
 
 Windows'ga kirilgandan 1 daqiqa o'tib `start.bat` o'zi ishga tushadi. O'chirish: o'sha buyruq oxiriga `-Remove` qo'shiladi.
@@ -279,7 +279,7 @@ D:\flutter\bin\flutter.bat doctor
 ### 7.2. APK yig'ish
 
 ```bash
-cd D:\OSPanel\domains\LessonLoop.loc\mobile
+cd G:\OSPanel\home\LessonLoop.loc\mobile
 D:\flutter\bin\flutter.bat build apk --release
 ```
 
@@ -299,7 +299,7 @@ Ilova ichki tarmoqdagi `http://` serverga ulanishga sozlangan. Hozircha APK debu
 - Qo'lda nusxa olish:
 
 ```bash
-G:\OSPanel\modules\PHP-8.3\php.exe D:\OSPanel\domains\LessonLoop.loc\backend\artisan lessonloop:backup
+G:\OSPanel\modules\PHP-8.3\php.exe G:\OSPanel\home\LessonLoop.loc\backend\artisan lessonloop:backup
 ```
 
 - Boshqa papka (masalan, flesh yoki boshqa disk): `backend\.env` ga `LESSONLOOP_BACKUP_DIR=E:\LessonLoop-backups`, muddat: `LESSONLOOP_BACKUP_DAYS=60`.
@@ -320,7 +320,7 @@ G:\OSPanel\modules\MySQL-8.4\bin\mysql.exe -h mysql-8.4 -u root lessonloop < les
 | Belgisi | Sabab va yechim |
 | --- | --- |
 | start.bat: «MySQL ... ishlamayapti» | OpenServer 6 da MySQL-8.4 modulini yoqing |
-| start.bat: «Port 8000 javob bermayapti» | OpenServer 6 da Nginx, PHP-8.3 va `lessonloop.loc` loyihasi yoqilganmi? |
+| start.bat: «Port 8000 band» | OpenServer'ning Nginx (va PHP-8.3) moduli yoqilib qolgan yoki eski start.bat oynasi ochiq — modullarni o'chiring, `deploy\stop.bat`, keyin `deploy\start.bat` |
 | Brauzerda «Как вы здесь оказались?» | Saytni OpenServer'ning nginx'i beryapti (`'OSPanel6'` usuli yoki Nginx moduli yoqilib qolgan). Panelda Nginx va PHP-8.3 modullarini o'chiring, `deploy\stop.bat`, keyin `deploy\start.bat` (1.2) |
 | `/admin/` ochiladi, lekin bo'sh yoki 404 | `deploy\build.bat` ni ishga tushiring |
 | Telefon: «Serverga ulanib bo'lmadi» | Telefon va server bitta Wi-Fi'dami? Server manzili to'g'rimi (`http://IP:8000/api`)? Firewall (1.5)? Server kompyuterning brauzerida `http://IP:8000/admin/` ochiladimi? |
@@ -338,7 +338,7 @@ G:\OSPanel\modules\MySQL-8.4\bin\mysql.exe -h mysql-8.4 -u root lessonloop < les
 Yangi versiya chiqqanda (server kompyuterda):
 
 ```bash
-cd D:\OSPanel\domains\LessonLoop.loc
+cd G:\OSPanel\home\LessonLoop.loc
 git pull
 ```
 
